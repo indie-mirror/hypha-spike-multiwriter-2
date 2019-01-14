@@ -1,0 +1,20 @@
+{
+  "name": "aspect-setup-1",
+  "version": "1.0.0",
+  "description": "Aspect setup spike",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@source.ind.ie:hypha/spikes/aspect-setup-1.git"
+  },
+  "keywords": [
+    "hypha",
+    "aspect",
+    "setup"
+  ],
+  "author": "Aral Balkan",
+  "license": "AGPL-3.0-or-later"
+}

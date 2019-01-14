@@ -1,0 +1,46 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: sans-serif;
+}
+
+form {
+  width: 100%;
+  padding: 2em;
+}
+
+fieldset {
+  display: grid;
+  grid-template-columns: 200px 1fr 100px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+input, textarea {
+  font-size: 1em;
+  border: 1px solid black;
+  padding: 0.5em;
+}
+
+#outputForm {
+  overflow: auto;
+}
+
+#outputForm label {
+  display: block;
+}
+
+#outputForm input, textarea {
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+#outputForm textArea {
+  height: 4em;
+  background-color: white;
+  color: black;
+}
+
