@@ -1,7 +1,7 @@
 {
   "name": "dat-1",
   "version": "1.0.0",
-  "description": "Hypha Spike: DAT 1",
+  "description": "Hypha Spike: Diceware",
   "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
