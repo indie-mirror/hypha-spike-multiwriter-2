@@ -5,12 +5,15 @@ const { pipeline } = require('stream')
 const budo = require('budo')
 const babelify = require('babelify')
 
-const server = budo('index.js', {
+const server = budo('client/index.js', {
   live: true,
   port: 443,
   ssl: true,
-  key: 'localhost-key.pem',
-  cert: 'localhost.pem',
+  dir: 'client/static/',              // Static content directory
+  key: 'server/localhost-key.pem',
+  cert: 'server/localhost.pem',
+  serve: 'bundle.js',
+  stream: process.stdout,             // Log to console
   browserify: {
     transform: babelify
   }
