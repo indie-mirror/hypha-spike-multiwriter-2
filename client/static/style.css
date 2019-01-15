@@ -6,9 +6,16 @@ html {
   font-family: sans-serif;
 }
 
+body {
+  padding: 2em;
+}
+
+h1 {
+  margin-bottom: 1.5em;
+}
+
 form {
   width: 100%;
-  padding: 2em;
 }
 
 fieldset {
@@ -25,17 +32,23 @@ input, textarea {
   padding: 0.5em;
 }
 
+footer {
+  margin-top: 2em;
+  border-top: 1px solid black;
+}
+
 #outputForm {
   overflow: auto;
 }
 
 #outputForm label {
   display: block;
+  margin-bottom: 0.75em;
 }
 
 #outputForm input, textarea {
   width: 100%;
-  margin-bottom: 1em;
+  margin-bottom: 1.5em;
 }
 
 #outputForm textArea {
