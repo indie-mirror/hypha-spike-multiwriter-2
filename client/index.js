@@ -1,5 +1,5 @@
 const session25519 = require('session25519')
-const diceware = require('eff-diceware-passphrase')
+const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
 
 // From libsodium.
 function to_hex(input) {
@@ -20,29 +20,42 @@ function to_hex(input) {
   return str;
 }
 
+// HTML elements.
+const passphraseForm = document.getElementById('passphraseForm')
+const publicSigningKeyTextField = document.getElementById('publicSigningKey')
+const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
+const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
+const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
+
+function generatePassphrase () {
+  const passphrase = generateEFFDicewarePassphrase.entropy(100)
+  passphraseForm.elements.passphrase.value = passphrase.join(' ')
+  generateKeys()
+}
+
+function generateKeys() {
+  const passphrase = passphraseForm.elements.passphrase.value
+  const domain = passphraseForm.elements.domain.value
+
+  session25519(domain, passphrase, (error, keys) => {
+    if (error) { alert(error); return }
+
+    publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
+    privateSigningKeyTextArea.value = to_hex(keys.secretSignKey)
+    publicEncryptionKeyTextField.value = to_hex(keys.publicKey)
+    privateEncryptionKeyTextField.value = to_hex(keys.secretKey)
+  })
+}
+
 // Main
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('password').focus()
 
-  document.getElementById('passwordForm').addEventListener('submit', (event) => {
-    const form = event.target
-    const password = form.elements.password.value
-    const domain = form.elements.domain.value
+  // Generate a passphrase at start
+  generatePassphrase()
 
-    const publicSigningKeyTextField = document.getElementById('publicSigningKey')
-    const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
-    const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
-    const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
-
-    session25519(domain, password, (error, keys) => {
-      if (error) { alert(error); return }
-
-      publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
-      privateSigningKeyTextArea.value = to_hex(keys.secretSignKey)
-      publicEncryptionKeyTextField.value = to_hex(keys.publicKey)
-      privateEncryptionKeyTextField.value = to_hex(keys.secretKey)
-    })
-
+  // Update the passphrase (and keys) when the change button is pressed.
+  passphraseForm.addEventListener('submit', (event) => {
+    generatePassphrase()
     event.preventDefault()
   })
 })
