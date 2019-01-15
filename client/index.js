@@ -22,6 +22,7 @@ function to_hex(input) {
 
 // HTML elements.
 const passphraseForm = document.getElementById('passphraseForm')
+const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
@@ -33,11 +34,32 @@ function generatePassphrase () {
   generateKeys()
 }
 
+function showProgressIndicator() {
+  indeterminateProgressIndicator.style.opacity = 100
+}
+
+function hideProgressIndicator() {
+  indeterminateProgressIndicator.style.opacity = 0
+}
+
+function clearOutputForm() {
+  publicSigningKeyTextField.value = ''
+  privateSigningKeyTextArea.value = ''
+  publicEncryptionKeyTextField.value = ''
+  privateEncryptionKeyTextField.value = ''
+}
+
 function generateKeys() {
   const passphrase = passphraseForm.elements.passphrase.value
   const domain = passphraseForm.elements.domain.value
 
+  clearOutputForm()
+  showProgressIndicator()
+
   session25519(domain, passphrase, (error, keys) => {
+
+    hideProgressIndicator()
+
     if (error) { alert(error); return }
 
     publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
@@ -49,6 +71,9 @@ function generateKeys() {
 
 // Main
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Hide the progress indicator
+  indeterminateProgressIndicator.style.opacity = 0
 
   // Generate a passphrase at start
   generatePassphrase()
