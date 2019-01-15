@@ -16,5 +16,8 @@
     "setup"
   ],
   "author": "Aral Balkan",
-  "license": "AGPL-3.0-or-later"
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "budo": "^11.5.0"
+  }
 }
