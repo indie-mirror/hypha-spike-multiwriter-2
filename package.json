@@ -1,18 +1,18 @@
 {
-  "name": "aspect-setup-1",
+  "name": "dat-1",
   "version": "1.0.0",
-  "description": "Aspect setup spike",
+  "description": "Hypha Spike: DAT 1",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git@source.ind.ie:hypha/spikes/aspect-setup-1.git"
+    "url": "git@source.ind.ie:hypha/spikes/dat-1.git"
   },
   "keywords": [
     "hypha",
-    "aspect",
+    "DAT",
     "setup"
   ],
   "author": "Aral Balkan",
