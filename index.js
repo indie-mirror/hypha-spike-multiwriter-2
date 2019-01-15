@@ -2,30 +2,26 @@ const fs = require('fs')
 const https = require('https')
 const { pipeline } = require('stream')
 
-const options = {
-  key: fs.readFileSync('localhost-key.pem'),
-  cert: fs.readFileSync('localhost.pem')
-}
+const budo = require('budo')
+const babelify = require('babelify')
 
-const routes = {
-  '/': 'index.html',
-  '/style.css': 'style.css',
-  '/session25519.js': 'session25519.js',
-  '/favicon.ico': 'favicon.ico'
-}
-
-https.createServer(options, (request, response) => {
-  const url = request.url
-
-  const fileToServe = routes[url]
-  if (fileToServe !== undefined) {
-    response.statusCode = 200
-    pipeline(fs.createReadStream(fileToServe), response)
-  } else {
-    console.log(`Unknown path requested: ${url}`)
-    response.statusCode = 404
-    response.end('Not found.')
+const server = budo('index.js', {
+  live: true,
+  port: 443,
+  ssl: true,
+  key: 'localhost-key.pem',
+  cert: 'localhost.pem',
+  browserify: {
+    transform: babelify
   }
-}).listen(443, () => {
-  console.log('Listening on port 443.')
+})
+
+server.on('connect', (event) => {
+  const horizontalRule = new Array(60).fill('⎺').join('')
+  console.log('\nHypha Spike: DAT 1')
+  console.log(horizontalRule)
+  console.log(`Serving: ${event.uri}`)
+  console.log(`Working directory: ${event.dir}`)
+  console.log(`Entry: ${event.serve}`)
+  console.log(horizontalRule)
 })
