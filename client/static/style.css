@@ -2,6 +2,12 @@
   box-sizing: border-box;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
 html {
   font-family: sans-serif;
 }
@@ -19,6 +25,20 @@ form {
 }
 
 fieldset {
+  border: 0;
+}
+
+legend {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-bottom: 1em;
+  padding-left: 0;
+  padding-right: 0;
+  border-bottom: 1px solid black;
+  width: 100%;
+}
+
+form div {
   display: grid;
   grid-template-columns: 200px 1fr 100px;
   border: 0;
@@ -28,7 +48,8 @@ fieldset {
 
 input, textarea {
   font-size: 1em;
-  border: 1px solid black;
+  border: 0;
+  background-color: #e9ece5 !important;
   padding: 0.5em;
 }
 

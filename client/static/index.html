@@ -11,15 +11,15 @@
   <h1>Hypha Spike: DAT 1</h1>
 
   <form id='passphraseForm'>
-    <fieldset>
+    <div>
       <label for='domain'>Domain</label>
       <input type='text' id='domain' value='ar.al' readonly>
-    </fieldset>
-    <fieldset>
+    </div>
+    <div>
       <label>Passphrase:</label>
       <input type='text' id='passphrase' readonly>
       <button id='change' type='submit'>Change</button>
-    </fieldset>
+    </div>
   </form>
 
   <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
@@ -32,17 +32,31 @@
   </div>
 
   <form id='outputForm'>
-      <label for='publicSigningKey'>Public signing key:</label>
-      <input type='text' id='publicSigningKey'>
+    <fieldset>
+      <legend>Public details</legend>
+      <div>
+        <label for='publicSigningKey'>Your hyphalink:</label>
+        <input type='text' id='publicSigningKey'>
+      </div>
+    </fieldset>
 
-      <label for='privateSigningKey'>Private signing key:</label>
-      <textarea id='privateSigningKey'></textarea>
+    <fieldset>
+      <legend>Internal details</legend>
+      <div>
+        <label for='privateSigningKey'>Private signing key:</label>
+        <textarea id='privateSigningKey'></textarea>
+      </div>
 
-      <label for='publicEncryptionKey'>Public encryption key:</label>
-      <input type='text' id='publicEncryptionKey'>
+      <div>
+        <label for='publicEncryptionKey'>Public encryption key:</label>
+        <input type='text' id='publicEncryptionKey'>
+      </div>
 
-      <label for='privateEncryptionKey'>Private encryption key:</label>
-      <input type='text' id='privateEncryptionKey'>
+      <div>
+        <label for='privateEncryptionKey'>Private encryption key:</label>
+        <input type='text' id='privateEncryptionKey'>
+      </div>
+    </fieldset>
   </form>
 
   <footer>
