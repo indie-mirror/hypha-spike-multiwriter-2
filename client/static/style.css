@@ -59,10 +59,16 @@ form p {
 }
 
 input, textarea {
+  font-family: sans-serif; /* Redefined for Firefox which doesn’t inherit from html node. */
   font-size: 1em;
   border: 0;
-  background-color: #e9ece5 !important;
+  color: black;
+  background-color: #e9ece5;
   padding: 0.5em;
+}
+
+textarea {
+  height: 2.5em;
 }
 
 footer {
