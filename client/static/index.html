@@ -10,34 +10,41 @@
 <body>
   <h1>Hypha Spike: DAT 1</h1>
 
-  <form id='passphraseForm'>
-    <div>
-      <label for='domain'>Domain</label>
-      <input type='text' id='domain' value='ar.al' readonly>
-    </div>
-    <div>
-      <label>Passphrase:</label>
-      <input type='text' id='passphrase' readonly>
-      <button id='change' type='submit'>Change</button>
-    </div>
-  </form>
+  <form id='setupForm'>
 
-  <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
-  <div id='indeterminateProgressIndicator' class="spinner">
-    <div class="rect1"></div>
-    <div class="rect2"></div>
-    <div class="rect3"></div>
-    <div class="rect4"></div>
-    <div class="rect5"></div>
-  </div>
-
-  <form id='outputForm'>
     <fieldset>
       <legend>Public details</legend>
       <div>
-        <label for='publicSigningKey'>Your hyphalink:</label>
-        <input type='text' id='publicSigningKey'>
+        <label for='domain'>Domain name:</label>
+        <input type='text' id='domain' value='ar.al' readonly>
       </div>
+      <div>
+          <label for='publicSigningKey'>Hyphalink:</label>
+          <input type='text' id='publicSigningKey'>
+
+          <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
+          <div id='indeterminateProgressIndicator' class="spinner">
+              <div class="rect1"></div>
+              <div class="rect2"></div>
+              <div class="rect3"></div>
+              <div class="rect4"></div>
+              <div class="rect5"></div>
+            </div>
+        </div>
+        <div>
+        <label>Passphrase:</label>
+        <input type='text' id='passphrase' readonly>
+        <button id='change' type='submit'>Change</button>
+      </div>
+
+      <h3>Notes</h3>
+
+      <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
+
+      <p>Your passphrase is randomly chosen for you using <a href='https://www.eff.org/dice'>a method called diceware</a> that would take the most sophisticated computers today hundreds of millions of years to crack<sup>1</sup>. Please save this passphrase in a password manager like <a href='https://www.passwordstore.org/'>pass</a> or <a href='https://1password.com/'>1password</a>.</p>
+
+      <p><em>1: The passphrase selection process has 100 bits of entropy.</em></p>
+
     </fieldset>
 
     <fieldset>
@@ -56,13 +63,14 @@
         <label for='privateEncryptionKey'>Private encryption key:</label>
         <input type='text' id='privateEncryptionKey'>
       </div>
-    </fieldset>
-  </form>
 
-  <footer>
-    <p>The passphrase generation process has 100 bits of entropy and would take ~ a few hundred million years to brute force with government-level resources.</p>
-    <p>The generated keys are Ed25519 (signing) and Curve25519 (encryption).</p>
-  </footer>
+      <h3>Notes</h3>
+
+      <p>The generated keys are Ed25519 (signing) and Curve25519 (encryption). The <em>hyphalink</em> is the public signing key.</em></p>
+
+    </fieldset>
+
+  </form>
 
   <script src='bundle.js'></script>
 </body>

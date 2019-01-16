@@ -21,7 +21,7 @@ function to_hex(input) {
 }
 
 // HTML elements.
-const passphraseForm = document.getElementById('passphraseForm')
+const setupForm = document.getElementById('setupForm')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
@@ -30,7 +30,7 @@ const privateEncryptionKeyTextField = document.getElementById('privateEncryption
 
 function generatePassphrase () {
   const passphrase = generateEFFDicewarePassphrase.entropy(100)
-  passphraseForm.elements.passphrase.value = passphrase.join(' ')
+  setupForm.elements.passphrase.value = passphrase.join(' ')
   generateKeys()
 }
 
@@ -42,7 +42,7 @@ function hideProgressIndicator() {
   indeterminateProgressIndicator.style.opacity = 0
 }
 
-function clearOutputForm() {
+function clearOutputFields() {
   publicSigningKeyTextField.value = ''
   privateSigningKeyTextArea.value = ''
   publicEncryptionKeyTextField.value = ''
@@ -50,10 +50,10 @@ function clearOutputForm() {
 }
 
 function generateKeys() {
-  const passphrase = passphraseForm.elements.passphrase.value
-  const domain = passphraseForm.elements.domain.value
+  const passphrase = setupForm.elements.passphrase.value
+  const domain = setupForm.elements.domain.value
 
-  clearOutputForm()
+  clearOutputFields()
   showProgressIndicator()
 
   session25519(domain, passphrase, (error, keys) => {
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   generatePassphrase()
 
   // Update the passphrase (and keys) when the change button is pressed.
-  passphraseForm.addEventListener('submit', (event) => {
+  setupForm.addEventListener('submit', (event) => {
     generatePassphrase()
     event.preventDefault()
   })

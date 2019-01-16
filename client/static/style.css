@@ -38,12 +38,24 @@ legend {
   width: 100%;
 }
 
-form div {
+fieldset > div {
   display: grid;
   grid-template-columns: 200px 1fr 100px;
   border: 0;
-  padding: 0;
-  margin: 0;
+  margin-bottom: 0.25em;
+}
+
+form h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0;
+  padding-left: 200px;
+}
+
+form p {
+  padding-left: 200px;
+  padding-right: 100px;
+  font-size: 0.9em;
+  line-height: 1.5;
 }
 
 input, textarea {
@@ -58,7 +70,7 @@ footer {
   border-top: 1px solid black;
 }
 
-#outputForm {
+/* #outputForm {
   overflow: auto;
 }
 
@@ -76,7 +88,7 @@ footer {
   height: 4em;
   background-color: white;
   color: black;
-}
+} */
 
 /* Spinkit CSS indeterminate progress indicator */
 /* http://tobiasahlin.com/spinkit/ */
@@ -85,8 +97,6 @@ footer {
   height: 40px;
   text-align: center;
   font-size: 10px;
-  margin-top: 2em;
-  margin-bottom: 2em;
 }
 
 .spinner > div {
