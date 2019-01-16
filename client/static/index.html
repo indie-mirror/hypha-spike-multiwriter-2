@@ -21,8 +21,13 @@
       <div>
           <label for='publicSigningKey'>Hyphalink:</label>
           <input type='text' id='publicSigningKey'>
-
+        </div>
+        <div>
+        <label>Passphrase:</label>
+        <input type='text' id='passphrase' readonly>
+        <div style='position: relative;'>
           <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
+          <button id='change' type='submit'>Change</button>
           <div id='indeterminateProgressIndicator' class="spinner">
               <div class="rect1"></div>
               <div class="rect2"></div>
@@ -30,11 +35,7 @@
               <div class="rect4"></div>
               <div class="rect5"></div>
             </div>
-        </div>
-        <div>
-        <label>Passphrase:</label>
-        <input type='text' id='passphrase' readonly>
-        <button id='change' type='submit'>Change</button>
+          </div>
       </div>
 
       <h3>Notes</h3>

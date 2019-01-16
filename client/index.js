@@ -22,6 +22,7 @@ function to_hex(input) {
 
 // HTML elements.
 const setupForm = document.getElementById('setupForm')
+const changeButton = document.getElementById('change')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
@@ -35,11 +36,13 @@ function generatePassphrase () {
 }
 
 function showProgressIndicator() {
-  indeterminateProgressIndicator.style.opacity = 100
+  changeButton.style.display = 'none';
+  indeterminateProgressIndicator.style.display = 'block';
 }
 
 function hideProgressIndicator() {
-  indeterminateProgressIndicator.style.opacity = 0
+  changeButton.style.display = 'block';
+  indeterminateProgressIndicator.style.display = 'none';
 }
 
 function clearOutputFields() {
@@ -73,7 +76,7 @@ function generateKeys() {
 document.addEventListener('DOMContentLoaded', () => {
 
   // Hide the progress indicator
-  indeterminateProgressIndicator.style.opacity = 0
+  hideProgressIndicator()
 
   // Generate a passphrase at start
   generatePassphrase()
