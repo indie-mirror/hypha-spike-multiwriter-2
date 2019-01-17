@@ -21,11 +21,6 @@
       </div>
 
       <div>
-          <label for='publicSigningKey'>Hyphalink:</label>
-          <input type='text' id='publicSigningKey'>
-      </div>
-
-      <div>
         <label>Passphrase:</label>
         <input type='text' id='passphrase' readonly>
         <div style='position: relative;'>
@@ -42,8 +37,27 @@
       </div>
 
       <div>
+          <label for='publicSigningKey'>Hyphalink:</label>
+          <input type='text' id='publicSigningKey'>
+      </div>
+
+      <div>
         <label for='generated'>Hypercore created?</label>
         <input type='text' id='generated' value='No'>
+      </div>
+
+      <div>
+        <label>Hypercore signals:</label>
+        <div>
+          <span id='readySignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Ready</span>
+          <span id='dataSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Data</span>
+          <span id='errorSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Error</span>
+          <span id='appendSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Append</span>
+          <span id='downloadSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> ↧</span>
+          <span id='uploadSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> ↥</span>
+          <span id='syncSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Sync</span>
+          <span id='closeSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Close</span>
+        </div>
       </div>
 
       <div>
@@ -52,7 +66,7 @@
       </div>
 
       <div>
-        <label for='errors'>Errors</label>
+        <label for='errors'>Errors:</label>
         <textarea id='errors'>None</textarea>
       </div>
 

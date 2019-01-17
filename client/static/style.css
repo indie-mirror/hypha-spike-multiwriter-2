@@ -93,6 +93,28 @@ footer {
   width: 64px;
 }
 
+/* Signals */
+
+.visible { display: inline-block !important; }
+.invisible { display: none !important; }
+
+.on {
+  color: green;
+  display: none;
+}
+
+#errorSignal > .on {
+  color: red;
+}
+
+#closeSignal > .on {
+  color: black;
+}
+
+.off {
+  color: grey;
+}
+
 /* Spinkit CSS indeterminate progress indicator */
 /* http://tobiasahlin.com/spinkit/ */
 

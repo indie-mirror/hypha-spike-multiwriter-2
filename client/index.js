@@ -29,6 +29,7 @@ function to_hex(input) {
 // HTML elements.
 const setupForm = document.getElementById('setupForm')
 const changeButton = document.getElementById('change')
+const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 const generatedTextField = document.getElementById('generated')
 const hypercoreContentsTextArea = document.getElementById('hypercoreContents')
@@ -38,11 +39,56 @@ const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
 
+const signals = ['data', 'error', 'append', 'download', 'upload', 'sync', 'close']
+
+function setSignalVisible(signal, state) {
+  const offState = document.querySelector(`#${signal}Signal > .off`)
+  const onState = document.querySelector(`#${signal}Signal > .on`)
+
+  if (state) {
+    onState.classList.add('visible')
+    offState.classList.add('invisible')
+  } else {
+    onState.classList.remove('visible')
+    offState.classList.remove('invisible')
+  }
+}
+
+function resetSignals() {
+  signals.forEach((signal) => {
+    setSignalVisible(signal, false)
+  })
+}
+
+function blinkSignal(signal) {
+  setSignalVisible(signal, true)
+
+  // Keep the ready signal lit throughout. All others, blink.
+  if (signal !== 'ready') {
+    setTimeout(() => {
+      setSignalVisible(signal, false)
+    }, 333)
+  }
+}
+
+function resetForm() {
+  passphraseTextField.value = ''
+  publicSigningKeyTextField.value = ''
+  generatedTextField.value = 'No'
+  resetSignals()
+  hypercoreContentsTextArea.value = ''
+  errorsTextArea.value = ''
+  privateSigningKeyTextArea.value = ''
+  publicEncryptionKeyTextField.value = ''
+  privateEncryptionKeyTextField.value = ''
+}
+
 function logError(error) {
   errorsTextArea.value += error
 }
 
 function generatePassphrase () {
+  resetForm()
   const passphrase = generateEFFDicewarePassphrase.entropy(100)
   setupForm.elements.passphrase.value = passphrase.join(' ')
   generateKeys()
@@ -72,8 +118,6 @@ function generateKeys() {
   clearOutputFields()
   showProgressIndicator()
 
-  let feed = null
-
   session25519(domain, passphrase, (error, keys) => {
 
     hideProgressIndicator()
@@ -82,9 +126,6 @@ function generateKeys() {
       logError(error.message)
       return
     }
-
-    // Close the existing feed, if one exists.
-    if (feed !== null) { feed.close() }
 
     //
     // Convert the keys first to ArrayBuffer and then to
@@ -96,11 +137,14 @@ function generateKeys() {
     //
     // Error: key must be at least 16, was given undefined
     //
+
+    console.log(`Creating new hypercore with read key ${to_hex(keys.publicSignKey)} and write key ${to_hex(keys.secretSignKey)}`)
+
     const hypercoreReadKey = Buffer.from(keys.publicSignKey.buffer)
     const hypercoreWriteKey = Buffer.from(keys.secretSignKey.buffer)
 
     // Create a new hypercore using the newly-generated key material.
-    feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
+    let feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
       createIfMissing: false,
       overwrite: false,
       valueEncoding: 'json',
@@ -114,8 +158,9 @@ function generateKeys() {
     })
 
     feed.on('ready', () => {
-      console.log('Feed: [Ready]')
+      console.log(`Feed: [Ready] ${to_hex(feed.key)}`)
 
+      blinkSignal('ready')
       generatedTextField.value = 'Yes'
 
       if (!feed.writable) {
@@ -136,6 +181,7 @@ function generateKeys() {
       const stream = feed.createReadStream({live:true})
       stream.on('data', (data) => {
 
+        blinkSignal('data')
         console.log('Feed [read stream, on data]' , data)
 
         // New data is available on the feed. Display it on the page.
@@ -150,6 +196,7 @@ function generateKeys() {
       const NUMBER_TO_APPEND = 3
       let counter = 0
 
+      const intervalToUpdateInMS = 500
       Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };
       const updateInterval = setInterval(() => {
         counter++
@@ -170,33 +217,59 @@ function generateKeys() {
           }
           console.log('  Sequence', sequence)
         })
-      }, 1000)
+      }, intervalToUpdateInMS)
     })
 
     feed.on('error', (error) => {
       console.log(`Feed [Error] ${error}`)
+      blinkSignal('error')
       logError(error)
     })
 
     feed.on('download', (index, data) => {
+      blinkSignal('download')
       console.log(`Feed [Download] index = ${index}, data = ${data}`)
     })
 
     feed.on('upload', (index, data) => {
+      blinkSignal('upload')
       console.log(`Feed [Upload] index = ${index}, data = ${data}`)
     })
 
     feed.on('append', () => {
+      blinkSignal('append')
       console.log('Feed [Append]')
     })
 
     feed.on('sync', () => {
-      console.log('Feed sync')
+      blinkSignal('sync')
+      console.log('Feed [Sync]')
     })
 
     feed.on('close', () => {
-      console.log('Feed close')
+      blinkSignal('close')
+      console.log('Feed [Close]')
     })
+
+    // Update the passphrase (and keys) when the change button is pressed.
+    function onChangeButtonPress (event) {
+
+      // If a feed exists, close it and then generate the new keys/feed.
+      if (feed !== null) {
+        feed.close((error) => {
+          // Feed is closed. Error is not really an error.
+          generatePassphrase()
+        })
+        event.preventDefault()
+        return
+      }
+
+      // Otherwise, just go ahead and generate the keys now.
+      generatePassphrase()
+      event.preventDefault()
+    }
+    setupForm.removeEventListener('submit', onChangeButtonPress)
+    setupForm.addEventListener('submit', onChangeButtonPress)
 
     // Display the keys.
     publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
@@ -206,6 +279,8 @@ function generateKeys() {
   })
 }
 
+let feedClosedInResponseToChangeButtonPress = false
+
 // Main
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -214,10 +289,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Generate a passphrase at start
   generatePassphrase()
-
-  // Update the passphrase (and keys) when the change button is pressed.
-  setupForm.addEventListener('submit', (event) => {
-    generatePassphrase()
-    event.preventDefault()
-  })
 })
