@@ -45,6 +45,11 @@ fieldset > div {
   margin-bottom: 0.25em;
 }
 
+label {
+  /* Vertically-centre the labels */
+  margin: auto 0;
+}
+
 form h3 {
   margin-top: 1.5em;
   margin-bottom: 0;
