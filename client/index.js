@@ -99,11 +99,42 @@ function generateKeys() {
       onwrite: (index, data, peer, cb) => {
         console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
         console.log(data)
+        cb()
       }
     })
 
     feed.on('ready', () => {
       console.log('Feed: [Ready]')
+
+      console.log(`Feed writeable? ${feed.writable}`)
+
+      const stream = feed.createReadStream({live:true})
+      stream.on('data', x => console.log(x))
+
+      //
+      // TEST
+      //
+      const NUMBER_TO_APPEND = 1
+      let counter = 0
+
+      Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };
+      const updateInterval = setInterval(() => {
+        counter++
+        if (counter === NUMBER_TO_APPEND) {
+          console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
+          clearInterval(updateInterval)
+        }
+
+        const key = (new Date()).getUnixTime()
+        const value = Math.random()*1000000000000000000 // simple random number
+        let obj = {}
+        obj[key] = value
+        feed.append(obj, (error, sequence) => {
+          console.log('Append callback')
+          console.log('Error', error)
+          console.log('Sequence', sequence)
+        })
+      }, 1000)
     })
 
     feed.on('error', (error) => {
@@ -129,9 +160,6 @@ function generateKeys() {
     feed.on('close', () => {
       console.log('Feed close')
     })
-
-    // TEST
-    feed.append({'a': 'test'})
 
     // Display the keys.
     publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
