@@ -96,10 +96,10 @@ function generateKeys() {
       valueEncoding: 'json',
       secretKey: hypercoreWriteKey,
       storeSecretKey: false,
-      onwrite: (index, data, peer, cb) => {
+      onwrite: (index, data, peer, next) => {
         console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
         console.log(data)
-        cb()
+        next()
       }
     })
 
