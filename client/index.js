@@ -30,6 +30,9 @@ function to_hex(input) {
 const setupForm = document.getElementById('setupForm')
 const changeButton = document.getElementById('change')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
+const generatedTextField = document.getElementById('generated')
+const hypercoreContentsTextArea = document.getElementById('hypercoreContents')
+
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
@@ -106,15 +109,27 @@ function generateKeys() {
     feed.on('ready', () => {
       console.log('Feed: [Ready]')
 
-      console.log(`Feed writeable? ${feed.writable}`)
+      generatedTextField.value = 'Yes'
 
+      if (!feed.writable) {
+        generatedTextField.value = 'Yes (warning: but feed is not writable)'
+        return
+      }
+
+      // Create a read stream
       const stream = feed.createReadStream({live:true})
-      stream.on('data', x => console.log(x))
+      stream.on('data', (data) => {
+
+        // New data is available on the feed. Display it on the page.
+        for (let [key, value] of Object.entries(data)) {
+          hypercoreContentsTextArea.value += `${key}: ${value}\n`
+        }
+      })
 
       //
       // TEST
       //
-      const NUMBER_TO_APPEND = 1
+      const NUMBER_TO_APPEND = 3
       let counter = 0
 
       Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };

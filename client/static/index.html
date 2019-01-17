@@ -14,15 +14,18 @@
 
     <fieldset>
       <legend>Public details</legend>
+
       <div>
         <label for='domain'>Domain name:</label>
         <input type='text' id='domain' value='ar.al' readonly>
       </div>
+
       <div>
           <label for='publicSigningKey'>Hyphalink:</label>
           <input type='text' id='publicSigningKey'>
-        </div>
-        <div>
+      </div>
+
+      <div>
         <label>Passphrase:</label>
         <input type='text' id='passphrase' readonly>
         <div style='position: relative;'>
@@ -36,6 +39,16 @@
               <div class="rect5"></div>
             </div>
           </div>
+      </div>
+
+      <div>
+        <label for='generated'>Hypercore created?</label>
+        <input type='text' id='generated' value='No'>
+      </div>
+
+      <div>
+        <label for='hypercoreContents'>Hypercore contents</label>
+        <textarea id='hypercoreContents'></textarea>
       </div>
 
       <h3>Notes</h3>

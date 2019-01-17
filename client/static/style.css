@@ -73,7 +73,11 @@ input, textarea {
 }
 
 textarea {
-  height: 2.5em;
+  height: 3em;
+}
+
+#hypercoreContents {
+  height: 6em;
 }
 
 footer {
