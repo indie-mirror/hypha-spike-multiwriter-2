@@ -76,7 +76,7 @@ textarea {
   height: 3em;
 }
 
-#hypercoreContents {
+#hypercoreContents, #errors {
   height: 6em;
 }
 

@@ -32,11 +32,15 @@ const changeButton = document.getElementById('change')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 const generatedTextField = document.getElementById('generated')
 const hypercoreContentsTextArea = document.getElementById('hypercoreContents')
-
+const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
+
+function logError(error) {
+  errorsTextArea.value += error
+}
 
 function generatePassphrase () {
   const passphrase = generateEFFDicewarePassphrase.entropy(100)
@@ -74,7 +78,10 @@ function generateKeys() {
 
     hideProgressIndicator()
 
-    if (error) { alert(error); return }
+    if (error) {
+      logError(error.message)
+      return
+    }
 
     // Close the existing feed, if one exists.
     if (feed !== null) { feed.close() }
@@ -157,14 +164,18 @@ function generateKeys() {
         obj[key] = value
         feed.append(obj, (error, sequence) => {
           console.log('Append callback')
-          console.log('Error', error)
-          console.log('Sequence', sequence)
+          if (error) {
+            logError(error)
+            return
+          }
+          console.log('  Sequence', sequence)
         })
       }, 1000)
     })
 
     feed.on('error', (error) => {
       console.log(`Feed [Error] ${error}`)
+      logError(error)
     })
 
     feed.on('download', (index, data) => {
