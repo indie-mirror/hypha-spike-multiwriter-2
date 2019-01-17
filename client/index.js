@@ -116,9 +116,20 @@ function generateKeys() {
         return
       }
 
+      //
+      // Note: the order of execution for an append appears to be:
+      //
+      // 1. onWrite handler (execution stops unless next() is called)
+      // 2. feed’s on('append') handler
+      // 3. feed.append callback function
+      // 4. readStream’s on('data') handler
+      //
+
       // Create a read stream
       const stream = feed.createReadStream({live:true})
       stream.on('data', (data) => {
+
+        console.log('Feed [read stream, on data]' , data)
 
         // New data is available on the feed. Display it on the page.
         for (let [key, value] of Object.entries(data)) {
