@@ -39,7 +39,7 @@ const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
 
-const signals = ['data', 'error', 'append', 'download', 'upload', 'sync', 'close']
+const signals = ['ready', 'data', 'error', 'append', 'download', 'upload', 'sync', 'close']
 
 function setSignalVisible(signal, state) {
   const offState = document.querySelector(`#${signal}Signal > .off`)
@@ -88,10 +88,18 @@ function logError(error) {
 }
 
 function generatePassphrase () {
+  console.log('--- generatePassphrase() ---')
+
   resetForm()
-  const passphrase = generateEFFDicewarePassphrase.entropy(100)
-  setupForm.elements.passphrase.value = passphrase.join(' ')
-  generateKeys()
+
+  showProgressIndicator()
+
+  // On next tick, so the interface has a chance to update.
+  setTimeout(() => {
+    const passphrase = generateEFFDicewarePassphrase.entropy(100)
+    setupForm.elements.passphrase.value = passphrase.join(' ')
+    generateKeys()
+  }, 0)
 }
 
 function showProgressIndicator() {
@@ -112,11 +120,11 @@ function clearOutputFields() {
 }
 
 function generateKeys() {
+
+  console.log('--- generateKeys() ---')
+
   const passphrase = setupForm.elements.passphrase.value
   const domain = setupForm.elements.domain.value
-
-  clearOutputFields()
-  showProgressIndicator()
 
   session25519(domain, passphrase, (error, keys) => {
 
@@ -143,8 +151,12 @@ function generateKeys() {
     const hypercoreReadKey = Buffer.from(keys.publicSignKey.buffer)
     const hypercoreWriteKey = Buffer.from(keys.secretSignKey.buffer)
 
+    let feed = null
+    let stream = null
+    let updateInterval = null
+
     // Create a new hypercore using the newly-generated key material.
-    let feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
+    feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
       createIfMissing: false,
       overwrite: false,
       valueEncoding: 'json',
@@ -156,6 +168,7 @@ function generateKeys() {
         next()
       }
     })
+
 
     feed.on('ready', () => {
       console.log(`Feed: [Ready] ${to_hex(feed.key)}`)
@@ -178,7 +191,7 @@ function generateKeys() {
       //
 
       // Create a read stream
-      const stream = feed.createReadStream({live:true})
+      stream = feed.createReadStream({live:true})
       stream.on('data', (data) => {
 
         blinkSignal('data')
@@ -197,12 +210,13 @@ function generateKeys() {
       let counter = 0
 
       const intervalToUpdateInMS = 500
-      Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };
-      const updateInterval = setInterval(() => {
+      Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 }
+      updateInterval = setInterval(() => {
         counter++
         if (counter === NUMBER_TO_APPEND) {
           console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
           clearInterval(updateInterval)
+          updateInterval = null
         }
 
         const key = (new Date()).getUnixTime()
@@ -254,9 +268,27 @@ function generateKeys() {
     // Update the passphrase (and keys) when the change button is pressed.
     function onChangeButtonPress (event) {
 
+      console.log('((( onChangeButtonPress )))')
+
+      // Let’s remove ourselves as a listener as we will be
+      // re-added on the next refresh.
+      setupForm.removeEventListener('submit', onChangeButtonPress)
+
+      if (updateInterval !== null) {
+        clearInterval(updateInterval)
+        updateInterval = null
+      }
+
+      if (stream !== null) {
+        stream.destroy()
+        stream = null
+      }
+
       // If a feed exists, close it and then generate the new keys/feed.
       if (feed !== null) {
         feed.close((error) => {
+          console.log(">>> Feed is closed. <<<")
+          feed = null
           // Feed is closed. Error is not really an error.
           generatePassphrase()
         })
@@ -268,7 +300,6 @@ function generateKeys() {
       generatePassphrase()
       event.preventDefault()
     }
-    setupForm.removeEventListener('submit', onChangeButtonPress)
     setupForm.addEventListener('submit', onChangeButtonPress)
 
     // Display the keys.
@@ -279,10 +310,10 @@ function generateKeys() {
   })
 }
 
-let feedClosedInResponseToChangeButtonPress = false
-
 // Main
 document.addEventListener('DOMContentLoaded', () => {
+
+  console.log('((( DOMContentLoaded )))')
 
   // Hide the progress indicator
   hideProgressIndicator()
