@@ -23,6 +23,7 @@
     "babelify": "^10.0.0",
     "budo": "github:aral/budo",
     "eff-diceware-passphrase": "^1.0.0",
+    "hypercore": "^6.22.4",
     "session25519": "github:aral/session25519"
   }
 }
