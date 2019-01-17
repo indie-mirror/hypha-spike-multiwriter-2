@@ -1,5 +1,11 @@
+// Initial key generation
 const session25519 = require('session25519')
 const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
+
+// Hypercore
+const { Buffer } = require('buffer')
+const ram = require('random-access-memory')
+const hypercore = require('hypercore')
 
 // From libsodium.
 function to_hex(input) {
@@ -59,12 +65,75 @@ function generateKeys() {
   clearOutputFields()
   showProgressIndicator()
 
+  let feed = null
+
   session25519(domain, passphrase, (error, keys) => {
 
     hideProgressIndicator()
 
     if (error) { alert(error); return }
 
+    // Close the existing feed, if one exists.
+    if (feed !== null) { feed.close() }
+
+    //
+    // Convert the keys first to ArrayBuffer and then to
+    // Node’s implementation of Buffer, which is what
+    // hypercore expected.
+    //
+    // If you try to pass an ArrayBuffer instead, you get
+    // the following error:
+    //
+    // Error: key must be at least 16, was given undefined
+    //
+    const hypercoreReadKey = Buffer.from(keys.publicSignKey.buffer)
+    const hypercoreWriteKey = Buffer.from(keys.secretSignKey.buffer)
+
+    // Create a new hypercore using the newly-generated key material.
+    feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
+      createIfMissing: false,
+      overwrite: false,
+      valueEncoding: 'json',
+      secretKey: hypercoreWriteKey,
+      storeSecretKey: false,
+      onwrite: (index, data, peer, cb) => {
+        console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
+        console.log(data)
+      }
+    })
+
+    feed.on('ready', () => {
+      console.log('Feed: [Ready]')
+    })
+
+    feed.on('error', (error) => {
+      console.log(`Feed [Error] ${error}`)
+    })
+
+    feed.on('download', (index, data) => {
+      console.log(`Feed [Download] index = ${index}, data = ${data}`)
+    })
+
+    feed.on('upload', (index, data) => {
+      console.log(`Feed [Upload] index = ${index}, data = ${data}`)
+    })
+
+    feed.on('append', () => {
+      console.log('Feed [Append]')
+    })
+
+    feed.on('sync', () => {
+      console.log('Feed sync')
+    })
+
+    feed.on('close', () => {
+      console.log('Feed close')
+    })
+
+    // TEST
+    feed.append({'a': 'test'})
+
+    // Display the keys.
     publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
     privateSigningKeyTextArea.value = to_hex(keys.secretSignKey)
     publicEncryptionKeyTextField.value = to_hex(keys.publicKey)

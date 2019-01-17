@@ -22,6 +22,7 @@
     "@babel/core": "^7.2.2",
     "babelify": "^10.0.0",
     "budo": "github:aral/budo",
+    "buffer": "^5.2.1",
     "eff-diceware-passphrase": "^1.0.0",
     "hypercore": "^6.22.4",
     "random-access-memory": "^3.1.1",
