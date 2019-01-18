@@ -5,7 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server/index.js"
+    "start": "nodemon server/index.js --watch server/index.js"
   },
   "repository": {
     "type": "git",
@@ -24,8 +24,13 @@
     "budo": "github:aral/budo",
     "buffer": "^5.2.1",
     "eff-diceware-passphrase": "^1.0.0",
+    "express": "^4.16.4",
+    "express-ws": "^4.0.0",
     "hypercore": "^6.22.4",
+    "monotonic-timestamp-base36": "^1.0.0",
+    "pump": "^3.0.0",
     "random-access-memory": "^3.1.1",
-    "session25519": "github:aral/session25519"
+    "session25519": "github:aral/session25519",
+    "websocket-stream": "^5.1.2"
   }
 }
