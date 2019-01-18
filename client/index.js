@@ -7,6 +7,12 @@ const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
 const hypercore = require('hypercore')
 
+// Web socket / replication
+const webSocketStream = require('websocket-stream')
+const pump = require('pump')
+
+const nextId = require('monotonic-timestamp-base36')
+
 // From libsodium.
 function to_hex(input) {
   // Disable input checking for this simple spike.
@@ -88,8 +94,6 @@ function logError(error) {
 }
 
 function generatePassphrase () {
-  console.log('--- generatePassphrase() ---')
-
   resetForm()
 
   showProgressIndicator()
@@ -120,9 +124,6 @@ function clearOutputFields() {
 }
 
 function generateKeys() {
-
-  console.log('--- generateKeys() ---')
-
   const passphrase = setupForm.elements.passphrase.value
   const domain = setupForm.elements.domain.value
 
@@ -171,7 +172,10 @@ function generateKeys() {
 
 
     feed.on('ready', () => {
-      console.log(`Feed: [Ready] ${to_hex(feed.key)}`)
+      const feedKey = feed.key
+      const feedKeyInHex = to_hex(feedKey)
+
+      console.log(`Feed: [Ready] ${feedKeyInHex}`)
 
       blinkSignal('ready')
       generatedTextField.value = 'Yes'
@@ -180,6 +184,30 @@ function generateKeys() {
         generatedTextField.value = 'Yes (warning: but feed is not writable)'
         return
       }
+
+      // Hypercore feed is ready: connect to web socket and start replicating.
+      const remoteStream = webSocketStream(`wss://localhost/hypha/${feedKeyInHex}`)
+
+      const localStream = feed.replicate({
+        encrypt: false,
+        live: true
+      })
+
+      // Create a duplex stream.
+      //
+      // What’s actually happening:
+      //
+      // remoteStream.write -> localStream.read
+      // localStream.write -> remoteStream.read
+      pump(
+        remoteStream,
+        localStream,
+        remoteStream,
+        (error) => {
+          console.log(`Pipe closed for ${feedKeyInHex}`, error && error.message)
+          logError(error.message)
+        }
+      )
 
       //
       // Note: the order of execution for an append appears to be:
@@ -210,7 +238,6 @@ function generateKeys() {
       let counter = 0
 
       const intervalToUpdateInMS = 500
-      Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 }
       updateInterval = setInterval(() => {
         counter++
         if (counter === NUMBER_TO_APPEND) {
@@ -219,7 +246,7 @@ function generateKeys() {
           updateInterval = null
         }
 
-        const key = (new Date()).getUnixTime()
+        const key = nextId()
         const value = Math.random()*1000000000000000000 // simple random number
         let obj = {}
         obj[key] = value
