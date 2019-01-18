@@ -1,3 +1,6 @@
+//
+// Hypha server.
+//
 const fs = require('fs')
 const https = require('https')
 const { pipeline } = require('stream')
@@ -7,6 +10,7 @@ const expressWebSocket = require('express-ws')
 const websocketStream = require('websocket-stream/stream')
 const ram  = require('random-access-memory')
 const hypercore = require('hypercore')
+const hyperswarm = require('@hyperswarm/network')
 
 const budo = require('budo')
 const babelify = require('babelify')
@@ -41,7 +45,9 @@ server.on('connect', (event) => {
 
   // Add web socket routes.
   router.ws('/hypha/:readKey', (webSocket, request) => {
+
     const readKey = request.params.readKey
+
     console.log('Got web socket request for ', readKey)
 
     if (hypercores[readKey] !== undefined) {
@@ -63,10 +69,10 @@ server.on('connect', (event) => {
 
     newCore.on('ready', () => {
       console.log(`Hypercore ready (${readKey})`)
-      const remoteStream = websocketStream(webSocket)
+
+      const remoteWebStream = websocketStream(webSocket)
 
       const localReadStream = newCore.createReadStream({live: true})
-
       localReadStream.on('data', (data) => {
         console.log('[Replicate]', data)
       })
@@ -80,13 +86,50 @@ server.on('connect', (event) => {
       })
 
       pipeline(
-        remoteStream,
+        remoteWebStream,
         localReplicationStream,
-        remoteStream,
+        remoteWebStream,
         (error) => {
           console.log(`Pipe closed for ${readKey}`, error && error.message)
         }
       )
+
+      //
+      // Connect to the hyperswarm for this hypercore.
+      //
+      const swarm = hyperswarm()
+
+      const discoveryKey = newCore.discoveryKey
+      const discoveryKeyInHex = discoveryKey.toString('hex')
+
+      console.log(discoveryKeyInHex)
+
+      console.log('About to join the swarm!')
+      // Join the swarm
+      swarm.join(newCore.discoveryKey, {
+        lookup: true, // find and connect to peers.
+        announce: true // optional: announce self as a connection target.
+      })
+
+      swarm.on('connection', (remoteNativeStream, details) => {
+        console.log(`Joined swarm for read key ${readKey} (discovery key: ${discoveryKeyInHex})`)
+
+        // Create a new replication stream
+        const nativeReplicationStream = newCore.replicate({
+          encrypt: false,
+          live: true
+        })
+
+        // Replicate!
+        pipeline(
+          remoteNativeStream,
+          nativeReplicationStream,
+          remoteNativeStream,
+          (error) => {
+            console.log(`(Native stream from swarm) Pipe closed for ${readKey}`, error && error.message)
+          }
+        )
+      })
     })
   })
 

@@ -1,3 +1,7 @@
+//
+// Hypha client
+//
+
 // Initial key generation
 const session25519 = require('session25519')
 const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
