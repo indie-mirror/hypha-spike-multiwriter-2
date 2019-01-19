@@ -10,20 +10,20 @@ const { discoveryKey } = require('hypercore/lib/crypto')
 
 const swarm = hyperswarm()
 
-//////////////////////////////////////////////////////////////////////////////////////////
-//
-// Manually entered for now.
-//
-const readKeyInHex = '0b77c7fc5a7dd4be30bf8e7c02c2c1a87798f0218697ce07b2bce93a5da82ba4'
-//
-//////////////////////////////////////////////////////////////////////////////////////////
+// Basic argument validation.
+if (process.argv.length !== 3) {
+  console.log(`Usage: node index.js <read key to replicate>`)
+  process.exit()
+}
+
+const readKeyInHex = process.argv[2]
+console.log(`\nAttempting to find and replicate hypercore with read key:\n${readKeyInHex}\n`)
 
 const readKeyBuffer = Buffer.from(readKeyInHex, 'hex')
 const discoveryKeyBuffer = discoveryKey(readKeyBuffer)
 const discoveryKeyInHex = discoveryKeyBuffer.toString('hex')
 
 // Create the local hypercore instance
-
 const localCore = hypercore((filename) => ram(filename), readKeyBuffer, {
   createIfMissing: false,
   overwrite: false,
