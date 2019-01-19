@@ -11,9 +11,16 @@ const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
 const hypercore = require('hypercore')
 
-// Web socket / replication
-const webSocketStream = require('websocket-stream')
+// Streams (equivalent of pipeline in Node).
 const pump = require('pump')
+
+// Web socket replication
+const webSocketStream = require('websocket-stream')
+
+// WebRTC replication
+const signalhub = require('signalhub')
+const { discoveryKey } = require('hypercore/lib/crypto')
+const swarm = require('webrtc-swarm')
 
 const nextId = require('monotonic-timestamp-base36')
 
@@ -151,14 +158,20 @@ function generateKeys() {
     // Error: key must be at least 16, was given undefined
     //
 
-    console.log(`Creating new hypercore with read key ${to_hex(keys.publicSignKey)} and write key ${to_hex(keys.secretSignKey)}`)
-
+    const hypercoreReadKeyInHex = to_hex(keys.publicSignKey)
+    const hypercoreWriteKeyInHex = to_hex(keys.secretSignKey)
     const hypercoreReadKey = Buffer.from(keys.publicSignKey.buffer)
     const hypercoreWriteKey = Buffer.from(keys.secretSignKey.buffer)
+
+    // Calculate the discovery key from the read key (the hyphalink).
+    const hypercoreDiscoveryKey = discoveryKey(hypercoreReadKey)
+    const hypercoreDiscoveryKeyInHex = hypercoreDiscoveryKey.toString('hex')
 
     let feed = null
     let stream = null
     let updateInterval = null
+
+    console.log(`Creating new hypercore with read key ${hypercoreReadKeyInHex} and write key ${hypercoreWriteKeyInHex}`)
 
     // Create a new hypercore using the newly-generated key material.
     feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
@@ -212,6 +225,32 @@ function generateKeys() {
           logError(error.message)
         }
       )
+
+      // Also join a WebRTC swarm so that we can peer-to-peer replicate
+      // this hypercore (browser to browser).
+      const webSwarm = swarm(signalhub(hypercoreDiscoveryKeyInHex, ['https://localhost:445']))
+      webSwarm.on('peer', function (remoteWebStream) {
+
+        console.log(`WebSwarm [peer for ${hypercoreReadKeyInHex} (discovery key: ${hypercoreDiscoveryKeyInHex})] About to replicate.`)
+
+        // Create the local replication stream.
+        const localReplicationStream = feed.replicate({
+          // TODO: why is Jim’s shopping list example setting encrypt to false?
+          // The encryption of __what__ does this affect?
+          // (I haven’t even tested this yet with it set to true to limit the variables.)
+          encrypt: false,
+          live: true
+        })
+
+        pump(
+          remoteWebStream,
+          localReplicationStream,
+          remoteWebStream,
+          (error) => {
+            console.log(`[WebRTC] Pipe closed for ${hypercoreReadKeyInHex}`, error && error.message)
+          }
+        )
+      })
 
       //
       // Note: the order of execution for an append appears to be:
