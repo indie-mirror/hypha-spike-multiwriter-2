@@ -76,8 +76,8 @@
 
       <ol>
         <li>Replicates it to the always-on node via Web Socket.</li>
-        <li>The always-on node joins a <a href=''>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink.</li>
-        <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink.</li>
+        <li>The always-on node joins a <a href='https://github.com/hyperswarm'>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink. (Test with <a href='https://source.ind.ie/hypha/spikes/dat-1/blob/master/native/index.js'>/native</a>)</li>
+        <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink. (Test with <a href='https://ar.al/2019/01/20/hypha-spike-webrtc-1/'>WebRTC 1 spike</a>)</li>
       </ol>
 
       <p><strong>Limitation:</strong> since this spike uses a single hypercore, it is single-writer. Only the original browser client can write to the hypercore. In the next spike, we will use hyperdb to create a multi-writer version.</p>
