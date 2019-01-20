@@ -56,11 +56,15 @@ form h3 {
   padding-left: 200px;
 }
 
-form p {
+form p, ol {
   padding-left: 200px;
   padding-right: 100px;
   font-size: 0.9em;
   line-height: 1.5;
+}
+
+li {
+  margin-top: 0.75em;
 }
 
 input, textarea {

@@ -72,6 +72,16 @@
 
       <h3>Notes</h3>
 
+      <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local read/write hypercore. It then populates it with some sample data, and:</p>
+
+      <ol>
+        <li>Replicates it to the always-on node via Web Socket.</li>
+        <li>The always-on node joins a <a href=''>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink.</li>
+        <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink.</li>
+      </ol>
+
+      <p><strong>Limitation:</strong> since this spike uses a single hypercore, it is single-writer. Only the original browser client can write to the hypercore. In the next spike, we will use hyperdb to create a multi-writer version.</p>
+
       <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
 
       <p>Your passphrase is the only thing that protects your Hypha. It is randomly chosen for you using <a href='https://www.eff.org/dice'>a method called diceware</a> that would take the most sophisticated computers today hundreds of millions of years to crack<sup>1</sup>. If your passphrase is compromised, your Hypha is compromised. If you lose it, you can no longer write to your Hypha. There is no recovery process.  Please save your passphrase in a password manager like <a href='https://www.passwordstore.org/'>pass</a> or <a href='https://1password.com/'>1password</a> and/or make a physical copy of it and store it in a safe place (like a safe, not on a post-it note attached to your monitor). Ideally, also try to memorise it.</p>
