@@ -104,7 +104,8 @@ server.on('connect', (event) => {
 
       console.log(discoveryKeyInHex)
 
-      console.log('About to join the swarm!')
+      console.log(`Joining hyperswarm for discovery key ${discoveryKeyInHex}.`)
+
       // Join the swarm
       swarm.join(newCore.discoveryKey, {
         lookup: true, // find and connect to peers.
@@ -112,7 +113,7 @@ server.on('connect', (event) => {
       })
 
       swarm.on('connection', (remoteNativeStream, details) => {
-        console.log(`Joined swarm for read key ${readKey} (discovery key: ${discoveryKeyInHex})`)
+        console.log(`Got peer for ${readKey} (discovery key: ${discoveryKeyInHex})`)
 
         // Create a new replication stream
         const nativeReplicationStream = newCore.replicate({
