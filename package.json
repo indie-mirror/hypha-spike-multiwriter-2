@@ -1,7 +1,7 @@
 {
-  "name": "dat-1",
+  "name": "hypha-spike-multiwriter-1",
   "version": "1.0.0",
-  "description": "Hypha Spike: DAT 1",
+  "description": "Hypha Spike: Multiwriter 1",
   "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@source.ind.ie:hypha/spikes/dat-1.git"
+    "url": "git@source.ind.ie:hypha/spikes/multiwriter-1.git"
   },
   "keywords": [
     "hypha",
