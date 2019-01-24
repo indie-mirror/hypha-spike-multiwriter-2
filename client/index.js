@@ -57,7 +57,7 @@ const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
 
-const signals = ['ready', 'data', 'error', 'append', 'download', 'upload', 'sync', 'close']
+const signals = ['ready', 'change', 'error', 'append', 'download', 'upload', 'sync', 'close']
 
 function setSignalVisible(signal, state) {
   const offState = document.querySelector(`#${signal}Signal > .off`)
@@ -168,21 +168,21 @@ function generateKeys() {
     const hypercoreDiscoveryKey = discoveryKey(hypercoreReadKey)
     const hypercoreDiscoveryKeyInHex = hypercoreDiscoveryKey.toString('hex')
 
-    let feed = null
+    let db = null
     let stream = null
     let updateInterval = null
 
     console.log(`Creating new hyperdb with read key ${hypercoreReadKeyInHex} and write key ${hypercoreWriteKeyInHex}`)
 
     // Create a new hypercore using the newly-generated key material.
-    feed = hyperdb((filename) => ram(filename), hypercoreReadKey, {
+    db = hyperdb((filename) => ram(filename), hypercoreReadKey, {
       createIfMissing: false,
       overwrite: false,
       valueEncoding: 'json',
       secretKey: hypercoreWriteKey,
       storeSecretKey: false //,
       // onwrite: (index, data, peer, next) => {
-      //   console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
+      //   console.log(`db: [onWrite] index = ${index}, peer = ${peer}, data:`)
       //   console.log(data)
       //   // TypeError: next is not a function
       //   // next()
@@ -190,24 +190,37 @@ function generateKeys() {
     })
 
 
-    feed.on('ready', () => {
-      const feedKey = feed.key
-      const feedKeyInHex = to_hex(feedKey)
+    db.on('ready', () => {
+      const dbKey = db.key
+      const dbKeyInHex = to_hex(dbKey)
 
-      console.log(`Feed: [Ready] ${feedKeyInHex}`)
+      console.log(`db: [Ready] ${dbKeyInHex}`)
 
       blinkSignal('ready')
       generatedTextField.value = 'Yes'
 
-      // if (!feed.writable) {
-      //   generatedTextField.value = 'Yes (warning: but feed is not writable)'
-      //   return
-      // }
+      const watcher = db.watch('/table', () => {
+        console.log('Database updated!')
+        db.get('/table', (error, values) => {
+          console.log(values)
 
-      // Hypercore feed is ready: connect to web socket and start replicating.
-      const remoteStream = webSocketStream(`wss://localhost/hypha/${feedKeyInHex}`)
+          blinkSignal('change')
+          console.log('db [change: get]', values)
 
-      const localStream = feed.replicate({
+          // New data is available on the db. Display it on the page.
+          const obj = values[0].value
+          for (let [key, value] of Object.entries(obj)) {
+            hypercoreContentsTextArea.value += `${key}: ${value}\n`
+          }
+
+        })
+      })
+
+
+      // Hypercore db is ready: connect to web socket and start replicating.
+      const remoteStream = webSocketStream(`wss://localhost/hypha/${dbKeyInHex}`)
+
+      const localStream = db.replicate({
         encrypt: false,
         live: true
       })
@@ -223,7 +236,7 @@ function generateKeys() {
         localStream,
         remoteStream,
         (error) => {
-          console.log(`Pipe closed for ${feedKeyInHex}`, error && error.message)
+          console.log(`Pipe closed for ${dbKeyInHex}`, error && error.message)
           logError(error.message)
         }
       )
@@ -236,7 +249,7 @@ function generateKeys() {
       //   console.log(`WebSwarm [peer for ${hypercoreReadKeyInHex} (discovery key: ${hypercoreDiscoveryKeyInHex})] About to replicate.`)
 
       //   // Create the local replication stream.
-      //   const localReplicationStream = feed.replicate({
+      //   const localReplicationStream = db.replicate({
       //     // TODO: why is Jim’s shopping list example setting encrypt to false?
       //     // The encryption of __what__ does this affect?
       //     // (I haven’t even tested this yet with it set to true to limit the variables.)
@@ -267,77 +280,55 @@ function generateKeys() {
           console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
           clearInterval(updateInterval)
           updateInterval = null
-
-          // Create a read stream.
-          // Note: unlike in hypercore, read stream does not get called in hyperdb
-          // for local writes when the stream is created before the write. I don’t know if
-          // this is a bug but it sure feels like it.
-          //
-          setTimeout(() => {
-            stream = feed.createReadStream()
-            console.log(stream)
-            stream.on('data', (data) => {
-
-              // data: array of objects.
-              // In this case, it looks like the data event is triggered once per put.
-
-              blinkSignal('data')
-              console.log('Feed [read stream, on data]' , data)
-
-              // New data is available on the feed. Display it on the page.
-              const _ = data[0]
-              hypercoreContentsTextArea.value += `${_.key}: ${_.value} (feed: ${_.feed}, seq: ${_.seq})}\n`
-            })
-          }, 1000)
         }
 
         const key = nextId()
         const value = Math.random()*1000000000000000000 // simple random number
         let obj = {}
         obj[key] = value
-        feed.put(key, value, (error, obj) => {
+        db.put('/table', obj, (error, o) => {
           console.log('Put callback')
           if (error) {
             logError(error)
             return
           }
-          console.log(`  Feed: ${obj.feed}`)
-          console.log(`  Sequence: ${obj.seq}`)
-          console.log(`  Key: ${obj.key}`)
-          console.log(`  Value: ${obj.value}`)
+          console.log('  Feed', o.feed)
+          console.log('  Sequence:', o.seq)
+          console.log('  Key:', o.key)
+          console.log('  Value:', o.value)
         })
       }, intervalToUpdateInMS)
     })
 
-    feed.on('error', (error) => {
-      console.log(`Feed [Error] ${error}`)
+    db.on('error', (error) => {
+      console.log(`db [Error] ${error}`)
       blinkSignal('error')
       logError(error)
     })
 
-    feed.on('download', (index, data) => {
+    db.on('download', (index, data) => {
       blinkSignal('download')
-      console.log(`Feed [Download] index = ${index}, data = ${data}`)
+      console.log(`db [Download] index = ${index}, data = ${data}`)
     })
 
-    feed.on('upload', (index, data) => {
+    db.on('upload', (index, data) => {
       blinkSignal('upload')
-      console.log(`Feed [Upload] index = ${index}, data = ${data}`)
+      console.log(`db [Upload] index = ${index}, data = ${data}`)
     })
 
-    feed.on('append', () => {
+    db.on('append', () => {
       blinkSignal('append')
-      console.log('Feed [Append]')
+      console.log('db [Append]')
     })
 
-    feed.on('sync', () => {
+    db.on('sync', () => {
       blinkSignal('sync')
-      console.log('Feed [Sync]')
+      console.log('db [Sync]')
     })
 
-    feed.on('close', () => {
+    db.on('close', () => {
       blinkSignal('close')
-      console.log('Feed [Close]')
+      console.log('db [Close]')
     })
 
     // Update the passphrase (and keys) when the change button is pressed.
@@ -359,12 +350,12 @@ function generateKeys() {
         stream = null
       }
 
-      // If a feed exists, close it and then generate the new keys/feed.
-      if (feed !== null) {
-        feed.close((error) => {
-          console.log(">>> Feed is closed. <<<")
-          feed = null
-          // Feed is closed. Error is not really an error.
+      // If a db exists, close it and then generate the new keys/db.
+      if (db !== null) {
+        db.close((error) => {
+          console.log(">>> db is closed. <<<")
+          db = null
+          // db is closed. Error is not really an error.
           generatePassphrase()
         })
         event.preventDefault()

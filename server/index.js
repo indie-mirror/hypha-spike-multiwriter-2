@@ -56,7 +56,7 @@ server.on('connect', (event) => {
     }
 
     // Create a new hyperdb with the passed read key and replicate.
-    const newCore = hyperdb((filename) => ram(filename), readKey, {
+    const db = hyperdb((filename) => ram(filename), readKey, {
       createIfMissing: false,
       overwrite: false,
       valueEncoding: 'json'
@@ -69,20 +69,25 @@ server.on('connect', (event) => {
       // }
     })
 
-    newCore.on('ready', () => {
+    db.on('ready', () => {
       console.log(`Hyperdb ready (${readKey})`)
 
       const remoteWebStream = websocketStream(webSocket)
 
-      const localReadStream = newCore.createReadStream()
-      localReadStream.on('data', (data) => {
-        console.log('[Replicate]', data)
+      const watcher = db.watch('/table', () => {
+        db.get('/table', (error, values) => {
+          // New data is available on the db. Display it on the page.
+          const obj = values[0].value
+          for (let [key, value] of Object.entries(obj)) {
+            console.log(`[Replicate] ${key}: ${value}`)
+          }
+        })
       })
 
       //
       // Replicate :)
       //
-      const localReplicationStream = newCore.replicate({
+      const localReplicationStream = db.replicate({
         encrypt: false,
         live: true
       })
@@ -101,7 +106,7 @@ server.on('connect', (event) => {
       //
       const swarm = hyperswarm()
 
-      const discoveryKey = newCore.discoveryKey
+      const discoveryKey = db.discoveryKey
       const discoveryKeyInHex = discoveryKey.toString('hex')
 
       console.log(discoveryKeyInHex)
@@ -109,7 +114,7 @@ server.on('connect', (event) => {
       console.log(`Joining hyperswarm for discovery key ${discoveryKeyInHex}.`)
 
       // Join the swarm
-      swarm.join(newCore.discoveryKey, {
+      swarm.join(db.discoveryKey, {
         lookup: true, // find and connect to Heers.
         announce: true // optional: announce self as a connection target.
       })
@@ -118,7 +123,7 @@ server.on('connect', (event) => {
         console.log(`Got peer for ${readKey} (discovery key: ${discoveryKeyInHex})`)
 
         // Create a new replication stream
-        const nativeReplicationStream = newCore.replicate({
+        const nativeReplicationStream = db.replicate({
           encrypt: false,
           live: true
         })
