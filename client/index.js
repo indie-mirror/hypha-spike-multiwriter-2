@@ -50,7 +50,7 @@ const changeButton = document.getElementById('change')
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 const generatedTextField = document.getElementById('generated')
-const hypercoreContentsTextArea = document.getElementById('hypercoreContents')
+const dbContentsTextArea = document.getElementById('hypercoreContents')
 const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
@@ -94,7 +94,7 @@ function resetForm() {
   publicSigningKeyTextField.value = ''
   generatedTextField.value = 'No'
   resetSignals()
-  hypercoreContentsTextArea.value = ''
+  dbContentsTextArea.value = ''
   errorsTextArea.value = ''
   privateSigningKeyTextArea.value = ''
   publicEncryptionKeyTextField.value = ''
@@ -159,27 +159,27 @@ function generateKeys() {
     // Error: key must be at least 16, was given undefined
     //
 
-    const hypercoreReadKeyInHex = to_hex(keys.publicSignKey)
-    const hypercoreWriteKeyInHex = to_hex(keys.secretSignKey)
-    const hypercoreReadKey = Buffer.from(keys.publicSignKey.buffer)
-    const hypercoreWriteKey = Buffer.from(keys.secretSignKey.buffer)
+    const nodeReadKeyInHex = to_hex(keys.publicSignKey)
+    const nodeWriteKeyInHex = to_hex(keys.secretSignKey)
+    const nodeReadKey = Buffer.from(keys.publicSignKey.buffer)
+    const nodeWriteKey = Buffer.from(keys.secretSignKey.buffer)
 
     // Calculate the discovery key from the read key (the hyphalink).
-    const hypercoreDiscoveryKey = discoveryKey(hypercoreReadKey)
-    const hypercoreDiscoveryKeyInHex = hypercoreDiscoveryKey.toString('hex')
+    const nodeDiscoveryKey = discoveryKey(nodeReadKey)
+    const nodeDiscoveryKeyInHex = nodeDiscoveryKey.toString('hex')
 
     let db = null
     let stream = null
     let updateInterval = null
 
-    console.log(`Creating new hyperdb with read key ${hypercoreReadKeyInHex} and write key ${hypercoreWriteKeyInHex}`)
+    console.log(`Creating new hyperdb with read key ${nodeReadKeyInHex} and write key ${nodeWriteKeyInHex}`)
 
     // Create a new hypercore using the newly-generated key material.
-    db = hyperdb((filename) => ram(filename), hypercoreReadKey, {
+    db = hyperdb((filename) => ram(filename), nodeReadKey, {
       createIfMissing: false,
       overwrite: false,
       valueEncoding: 'json',
-      secretKey: hypercoreWriteKey,
+      secretKey: nodeWriteKey,
       storeSecretKey: false //,
       // onwrite: (index, data, peer, next) => {
       //   console.log(`db: [onWrite] index = ${index}, peer = ${peer}, data:`)
@@ -210,9 +210,8 @@ function generateKeys() {
           // New data is available on the db. Display it on the page.
           const obj = values[0].value
           for (let [key, value] of Object.entries(obj)) {
-            hypercoreContentsTextArea.value += `${key}: ${value}\n`
+            dbContentsTextArea.value += `${key}: ${value}\n`
           }
-
         })
       })
 
@@ -241,31 +240,31 @@ function generateKeys() {
         }
       )
 
-      // // Also join a WebRTC swarm so that we can peer-to-peer replicate
-      // // this hypercore (browser to browser).
-      // const webSwarm = swarm(signalhub(hypercoreDiscoveryKeyInHex, ['https://localhost:445']))
-      // webSwarm.on('peer', function (remoteWebStream) {
+      // Also join a WebRTC swarm so that we can peer-to-peer replicate
+      // this hypercore (browser to browser).
+      const webSwarm = swarm(signalhub(nodeDiscoveryKeyInHex, ['https://localhost:445']))
+      webSwarm.on('peer', function (remoteWebStream) {
 
-      //   console.log(`WebSwarm [peer for ${hypercoreReadKeyInHex} (discovery key: ${hypercoreDiscoveryKeyInHex})] About to replicate.`)
+        console.log(`WebSwarm [peer for ${nodeReadKeyInHex} (discovery key: ${nodeDiscoveryKeyInHex})] About to replicate.`)
 
-      //   // Create the local replication stream.
-      //   const localReplicationStream = db.replicate({
-      //     // TODO: why is Jim’s shopping list example setting encrypt to false?
-      //     // The encryption of __what__ does this affect?
-      //     // (I haven’t even tested this yet with it set to true to limit the variables.)
-      //     encrypt: false,
-      //     live: true
-      //   })
+        // Create the local replication stream.
+        const localReplicationStream = db.replicate({
+          // TODO: why is Jim’s shopping list example setting encrypt to false?
+          // The encryption of __what__ does this affect?
+          // (I haven’t even tested this yet with it set to true to limit the variables.)
+          encrypt: false,
+          live: true
+        })
 
-      //   pump(
-      //     remoteWebStream,
-      //     localReplicationStream,
-      //     remoteWebStream,
-      //     (error) => {
-      //       console.log(`[WebRTC] Pipe closed for ${hypercoreReadKeyInHex}`, error && error.message)
-      //     }
-      //   )
-      // })
+        pump(
+          remoteWebStream,
+          localReplicationStream,
+          remoteWebStream,
+          (error) => {
+            console.log(`[WebRTC] Pipe closed for ${nodeReadKeyInHex}`, error && error.message)
+          }
+        )
+      })
 
       //
       // TEST

@@ -42,12 +42,12 @@
       </div>
 
       <div>
-        <label for='generated'>Hypercore created?</label>
+        <label for='generated'>Hyperdb created?</label>
         <input type='text' id='generated' value='No'>
       </div>
 
       <div>
-        <label>Hypercore signals:</label>
+        <label>Hyperdb signals:</label>
         <div>
           <span id='readySignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Ready</span>
           <span id='changeSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Change</span>
@@ -61,7 +61,7 @@
       </div>
 
       <div>
-        <label for='hypercoreContents'>Hypercore contents</label>
+        <label for='dbContents'>Hyperdb contents</label>
         <textarea id='hypercoreContents'></textarea>
       </div>
 
@@ -72,15 +72,13 @@
 
       <h3>Notes</h3>
 
-      <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local read/write hypercore. It then populates it with some sample data, and:</p>
+      <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local hyperdb. It then populates it with some sample data, and:</p>
 
       <ol>
         <li>Replicates it to the always-on node via Web Socket.</li>
         <li>The always-on node joins a <a href='https://github.com/hyperswarm'>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink. (Test with <a href='https://source.ind.ie/hypha/spikes/dat-1/blob/master/native/index.js'>/native</a>)</li>
         <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink. (Test with <a href='https://ar.al/2019/01/20/hypha-spike-webrtc-1/'>WebRTC 1 spike</a>)</li>
       </ol>
-
-      <p><strong>Limitation:</strong> since this spike uses a single hypercore, it is single-writer. Only the original browser client can write to the hypercore. In the next spike, we will use hyperdb to create a multi-writer version.</p>
 
       <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
 
