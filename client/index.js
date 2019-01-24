@@ -10,6 +10,7 @@ const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
 const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
 const hypercore = require('hypercore')
+const hyperdb = require('hyperdb')
 
 // Streams (equivalent of pipeline in Node).
 const pump = require('pump')
@@ -171,20 +172,21 @@ function generateKeys() {
     let stream = null
     let updateInterval = null
 
-    console.log(`Creating new hypercore with read key ${hypercoreReadKeyInHex} and write key ${hypercoreWriteKeyInHex}`)
+    console.log(`Creating new hyperdb with read key ${hypercoreReadKeyInHex} and write key ${hypercoreWriteKeyInHex}`)
 
     // Create a new hypercore using the newly-generated key material.
-    feed = hypercore((filename) => ram(filename), hypercoreReadKey, {
+    feed = hyperdb((filename) => ram(filename), hypercoreReadKey, {
       createIfMissing: false,
       overwrite: false,
       valueEncoding: 'json',
       secretKey: hypercoreWriteKey,
-      storeSecretKey: false,
-      onwrite: (index, data, peer, next) => {
-        console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
-        console.log(data)
-        next()
-      }
+      storeSecretKey: false //,
+      // onwrite: (index, data, peer, next) => {
+      //   console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
+      //   console.log(data)
+      //   // TypeError: next is not a function
+      //   // next()
+      // }
     })
 
 
@@ -197,10 +199,10 @@ function generateKeys() {
       blinkSignal('ready')
       generatedTextField.value = 'Yes'
 
-      if (!feed.writable) {
-        generatedTextField.value = 'Yes (warning: but feed is not writable)'
-        return
-      }
+      // if (!feed.writable) {
+      //   generatedTextField.value = 'Yes (warning: but feed is not writable)'
+      //   return
+      // }
 
       // Hypercore feed is ready: connect to web socket and start replicating.
       const remoteStream = webSocketStream(`wss://localhost/hypha/${feedKeyInHex}`)
@@ -226,53 +228,31 @@ function generateKeys() {
         }
       )
 
-      // Also join a WebRTC swarm so that we can peer-to-peer replicate
-      // this hypercore (browser to browser).
-      const webSwarm = swarm(signalhub(hypercoreDiscoveryKeyInHex, ['https://localhost:445']))
-      webSwarm.on('peer', function (remoteWebStream) {
+      // // Also join a WebRTC swarm so that we can peer-to-peer replicate
+      // // this hypercore (browser to browser).
+      // const webSwarm = swarm(signalhub(hypercoreDiscoveryKeyInHex, ['https://localhost:445']))
+      // webSwarm.on('peer', function (remoteWebStream) {
 
-        console.log(`WebSwarm [peer for ${hypercoreReadKeyInHex} (discovery key: ${hypercoreDiscoveryKeyInHex})] About to replicate.`)
+      //   console.log(`WebSwarm [peer for ${hypercoreReadKeyInHex} (discovery key: ${hypercoreDiscoveryKeyInHex})] About to replicate.`)
 
-        // Create the local replication stream.
-        const localReplicationStream = feed.replicate({
-          // TODO: why is Jim’s shopping list example setting encrypt to false?
-          // The encryption of __what__ does this affect?
-          // (I haven’t even tested this yet with it set to true to limit the variables.)
-          encrypt: false,
-          live: true
-        })
+      //   // Create the local replication stream.
+      //   const localReplicationStream = feed.replicate({
+      //     // TODO: why is Jim’s shopping list example setting encrypt to false?
+      //     // The encryption of __what__ does this affect?
+      //     // (I haven’t even tested this yet with it set to true to limit the variables.)
+      //     encrypt: false,
+      //     live: true
+      //   })
 
-        pump(
-          remoteWebStream,
-          localReplicationStream,
-          remoteWebStream,
-          (error) => {
-            console.log(`[WebRTC] Pipe closed for ${hypercoreReadKeyInHex}`, error && error.message)
-          }
-        )
-      })
-
-      //
-      // Note: the order of execution for an append appears to be:
-      //
-      // 1. onWrite handler (execution stops unless next() is called)
-      // 2. feed’s on('append') handler
-      // 3. feed.append callback function
-      // 4. readStream’s on('data') handler
-      //
-
-      // Create a read stream
-      stream = feed.createReadStream({live:true})
-      stream.on('data', (data) => {
-
-        blinkSignal('data')
-        console.log('Feed [read stream, on data]' , data)
-
-        // New data is available on the feed. Display it on the page.
-        for (let [key, value] of Object.entries(data)) {
-          hypercoreContentsTextArea.value += `${key}: ${value}\n`
-        }
-      })
+      //   pump(
+      //     remoteWebStream,
+      //     localReplicationStream,
+      //     remoteWebStream,
+      //     (error) => {
+      //       console.log(`[WebRTC] Pipe closed for ${hypercoreReadKeyInHex}`, error && error.message)
+      //     }
+      //   )
+      // })
 
       //
       // TEST
@@ -287,19 +267,44 @@ function generateKeys() {
           console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
           clearInterval(updateInterval)
           updateInterval = null
+
+          // Create a read stream.
+          // Note: unlike in hypercore, read stream does not get called in hyperdb
+          // for local writes when the stream is created before the write. I don’t know if
+          // this is a bug but it sure feels like it.
+          //
+          setTimeout(() => {
+            stream = feed.createReadStream()
+            console.log(stream)
+            stream.on('data', (data) => {
+
+              // data: array of objects.
+              // In this case, it looks like the data event is triggered once per put.
+
+              blinkSignal('data')
+              console.log('Feed [read stream, on data]' , data)
+
+              // New data is available on the feed. Display it on the page.
+              const _ = data[0]
+              hypercoreContentsTextArea.value += `${_.key}: ${_.value} (feed: ${_.feed}, seq: ${_.seq})}\n`
+            })
+          }, 1000)
         }
 
         const key = nextId()
         const value = Math.random()*1000000000000000000 // simple random number
         let obj = {}
         obj[key] = value
-        feed.append(obj, (error, sequence) => {
-          console.log('Append callback')
+        feed.put(key, value, (error, obj) => {
+          console.log('Put callback')
           if (error) {
             logError(error)
             return
           }
-          console.log('  Sequence', sequence)
+          console.log(`  Feed: ${obj.feed}`)
+          console.log(`  Sequence: ${obj.seq}`)
+          console.log(`  Key: ${obj.key}`)
+          console.log(`  Value: ${obj.value}`)
         })
       }, intervalToUpdateInMS)
     })

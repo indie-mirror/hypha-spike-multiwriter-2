@@ -9,7 +9,7 @@ const express = require('express')
 const expressWebSocket = require('express-ws')
 const websocketStream = require('websocket-stream/stream')
 const ram  = require('random-access-memory')
-const hypercore = require('hypercore')
+const hyperdb = require('hyperdb')
 const hyperswarm = require('@hyperswarm/network')
 
 const budo = require('budo')
@@ -17,7 +17,7 @@ const babelify = require('babelify')
 
 const router = express.Router()
 
-const hypercores = {}
+const hyperdbs = {}
 
 const server = budo('client/index.js', {
   live: false,
@@ -50,29 +50,31 @@ server.on('connect', (event) => {
 
     console.log('Got web socket request for ', readKey)
 
-    if (hypercores[readKey] !== undefined) {
-      console.log(`Hypercore with read key ${readKey} already exists. Ignoring.`)
+    if (hyperdbs[readKey] !== undefined) {
+      console.log(`Hyperdb with read key ${readKey} already exists. Ignoring.`)
       return
     }
 
-    // Create a new hypercore with the passed read key and replicate.
-    const newCore = hypercore((filename) => ram(filename), readKey, {
+    // Create a new hyperdb with the passed read key and replicate.
+    const newCore = hyperdb((filename) => ram(filename), readKey, {
       createIfMissing: false,
       overwrite: false,
-      valueEncoding: 'json',
-      onwrite: (index, data, peer, next) => {
-        // console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
-        // console.log(data)
-        next()
-      }
+      valueEncoding: 'json'
+      // This is causing issues with hyperdb. (next is not a function)
+      //,
+      // onwrite: (index, data, peer, next) => {
+      //   // console.log(`Feed: [onWrite] index = ${index}, peer = ${peer}, data:`)
+      //   // console.log(data)
+      //   next()
+      // }
     })
 
     newCore.on('ready', () => {
-      console.log(`Hypercore ready (${readKey})`)
+      console.log(`Hyperdb ready (${readKey})`)
 
       const remoteWebStream = websocketStream(webSocket)
 
-      const localReadStream = newCore.createReadStream({live: true})
+      const localReadStream = newCore.createReadStream()
       localReadStream.on('data', (data) => {
         console.log('[Replicate]', data)
       })
@@ -95,7 +97,7 @@ server.on('connect', (event) => {
       )
 
       //
-      // Connect to the hyperswarm for this hypercore.
+      // Connect to the hyperswarm for this hyperdb.
       //
       const swarm = hyperswarm()
 
@@ -108,7 +110,7 @@ server.on('connect', (event) => {
 
       // Join the swarm
       swarm.join(newCore.discoveryKey, {
-        lookup: true, // find and connect to peers.
+        lookup: true, // find and connect to Heers.
         announce: true // optional: announce self as a connection target.
       })
 

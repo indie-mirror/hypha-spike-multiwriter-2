@@ -28,6 +28,7 @@
     "express": "^4.16.4",
     "express-ws": "^4.0.0",
     "hypercore": "^6.22.4",
+    "hyperdb": "git+https://github.com/aral/hyperdb.git",
     "monotonic-timestamp-base36": "^1.0.0",
     "pump": "^3.0.0",
     "random-access-memory": "^3.1.1",
