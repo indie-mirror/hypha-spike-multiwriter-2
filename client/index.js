@@ -220,6 +220,9 @@ function generateKeys() {
       const remoteStream = webSocketStream(`wss://localhost/hypha/${dbKeyInHex}`)
 
       const localStream = db.replicate({
+        // If we remove the encrypt: false, we get an error on the server:
+        // Pipe closed for c4a99bc919c23d9c12b1fe440a41488141263e59fb98288388b578e105ad2523 Remote message is larger than 8MB (max allowed)
+        // Why is this and what’s the encryption that we’re turning off here and what effects does this have on privacy and security? (TODO: file issue)
         encrypt: false,
         live: true
       })
@@ -265,7 +268,7 @@ function generateKeys() {
       //
       // TEST
       //
-      const NUMBER_TO_APPEND = 3
+      const NUMBER_TO_APPEND = 100
       let counter = 0
 
       const intervalToUpdateInMS = 500

@@ -104,23 +104,25 @@ server.on('connect', (event) => {
       //
       // Connect to the hyperswarm for this hyperdb.
       //
+      const nativePeers = {}
+
       const swarm = hyperswarm()
 
       const discoveryKey = db.discoveryKey
       const discoveryKeyInHex = discoveryKey.toString('hex')
 
-      console.log(discoveryKeyInHex)
-
-      console.log(`Joining hyperswarm for discovery key ${discoveryKeyInHex}.`)
+      console.log(`Joining hyperswarm for discovery key ${discoveryKeyInHex}`)
 
       // Join the swarm
-      swarm.join(db.discoveryKey, {
-        lookup: true, // find and connect to Heers.
+      swarm.join(discoveryKey, {
+        lookup: true, // find and connect to peers.
         announce: true // optional: announce self as a connection target.
       })
 
       swarm.on('connection', (remoteNativeStream, details) => {
         console.log(`Got peer for ${readKey} (discovery key: ${discoveryKeyInHex})`)
+
+        console.log('About to replicate!')
 
         // Create a new replication stream
         const nativeReplicationStream = db.replicate({
@@ -137,6 +139,7 @@ server.on('connect', (event) => {
             console.log(`(Native stream from swarm) Pipe closed for ${readKey}`, error && error.message)
           }
         )
+
       })
     })
   })
