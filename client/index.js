@@ -249,10 +249,6 @@ function generateKeys() {
 
         // Create the local replication stream.
         const localReplicationStream = db.replicate({
-          // TODO: why is Jim’s shopping list example setting encrypt to false?
-          // The encryption of __what__ does this affect?
-          // (I haven’t even tested this yet with it set to true to limit the variables.)
-          encrypt: false,
           live: true
         })
 
