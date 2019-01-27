@@ -89,7 +89,7 @@ footer {
   border-top: 1px solid black;
 }
 
-#change {
+Button {
   position: absolute;
   top: 0;
   left: 0.5em;

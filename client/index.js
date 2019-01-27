@@ -48,9 +48,11 @@ function to_hex(input) {
 
 // HTML elements.
 const setupForm = document.getElementById('setupForm')
+const authoriseButton = document.getElementById('authorise')
 const changeButton = document.getElementById('change')
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
+const indeterminateProgressIndicator2 = document.getElementById('indeterminateProgressIndicator2')
 const generatedTextField = document.getElementById('generated')
 const dbContentsTextArea = document.getElementById('hypercoreContents')
 const errorsTextArea = document.getElementById('errors')
@@ -112,7 +114,7 @@ function logError(error) {
 function generatePassphrase () {
   resetForm()
 
-  showProgressIndicator()
+  showChangeButtonProgressIndicator()
 
   // On next tick, so the interface has a chance to update.
   setTimeout(() => {
@@ -122,14 +124,24 @@ function generatePassphrase () {
   }, 0)
 }
 
-function showProgressIndicator() {
+function showChangeButtonProgressIndicator() {
   changeButton.style.display = 'none';
   indeterminateProgressIndicator.style.display = 'block';
 }
 
-function hideProgressIndicator() {
+function hideChangeButtonProgressIndicator() {
   changeButton.style.display = 'block';
   indeterminateProgressIndicator.style.display = 'none';
+}
+
+function showAuthoriseButtonProgressIndicator() {
+  authoriseButton.style.display = 'none';
+  indeterminateProgressIndicator2.style.display = 'block';
+}
+
+function hideAuthoriseButtonProgressIndicator() {
+  authoriseButton.style.display = 'block';
+  indeterminateProgressIndicator2.style.display = 'none';
 }
 
 function clearOutputFields() {
@@ -145,7 +157,7 @@ function generateKeys() {
 
   session25519(domain, passphrase, (error, keys) => {
 
-    hideProgressIndicator()
+    hideChangeButtonProgressIndicator()
 
     if (error) {
       logError(error.message)
@@ -392,8 +404,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const nodeNameTextField = document.getElementById('nodeName')
   nodeNameTextField.value = nodeName
 
-  // Hide the progress indicator
-  hideProgressIndicator()
+  // Hide the progress indicators
+  hideChangeButtonProgressIndicator()
+  hideAuthoriseButtonProgressIndicator()
 
   // Generate a passphrase at start
   generatePassphrase()
