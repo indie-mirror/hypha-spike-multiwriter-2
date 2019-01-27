@@ -11,13 +11,37 @@
   <h1>Hypha Spike: Multiwriter 1</h1>
 
   <form id='setupForm'>
+    <fieldset>
+      <legend>Add node</legend>
+
+      <div>
+        <label for='remoteHyphalink'>Node name:</label>
+        <input type='text' id='remoteNodeName'>
+        <div style='position: relative;'>
+          <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
+          <button id='authorise' type='submit'>Authorise</button>
+          <div id='indeterminateProgressIndicator2' class="spinner">
+              <div class="rect1"></div>
+              <div class="rect2"></div>
+              <div class="rect3"></div>
+              <div class="rect4"></div>
+              <div class="rect5"></div>
+            </div>
+          </div>
+    </div>
+  </fieldset>
 
     <fieldset>
-      <legend>Public details</legend>
+      <legend>This node</legend>
 
       <div>
         <label for='domain'>Domain name:</label>
         <input type='text' id='domain' value='ar.al' readonly>
+      </div>
+
+      <div>
+        <label for='domain'>Node name:</label>
+        <input type='text' id='nodeName' value=''>
       </div>
 
       <div>
@@ -90,19 +114,25 @@
 
     <fieldset>
       <legend>Internal details</legend>
+
+      <div>
+        <label for='localKey'>Local key:</label>
+        <input type='text' id='localKey' readonly>
+      </div>
+
       <div>
         <label for='privateSigningKey'>Private signing key:</label>
-        <textarea id='privateSigningKey'></textarea>
+        <textarea id='privateSigningKey' readonly></textarea>
       </div>
 
       <div>
         <label for='publicEncryptionKey'>Public encryption key:</label>
-        <input type='text' id='publicEncryptionKey'>
+        <input type='text' id='publicEncryptionKey' readonly>
       </div>
 
       <div>
         <label for='privateEncryptionKey'>Private encryption key:</label>
-        <input type='text' id='privateEncryptionKey'>
+        <input type='text' id='privateEncryptionKey' readonly>
       </div>
 
       <h3>Notes</h3>

@@ -25,6 +25,8 @@ const swarm = require('webrtc-swarm')
 
 const nextId = require('monotonic-timestamp-base36')
 
+const platform = require('platform')
+
 // From libsodium.
 function to_hex(input) {
   // Disable input checking for this simple spike.
@@ -53,6 +55,8 @@ const generatedTextField = document.getElementById('generated')
 const dbContentsTextArea = document.getElementById('hypercoreContents')
 const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
+
+const localKeyTextField = document.getElementById('localKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
@@ -198,6 +202,9 @@ function generateKeys() {
 
       blinkSignal('ready')
       generatedTextField.value = 'Yes'
+
+      // Display the local key for the local writer.
+      localKeyTextField.value = db.local.key.toString('hex')
 
       const watcher = db.watch('/table', () => {
         console.log('Database updated!')
@@ -378,6 +385,11 @@ function generateKeys() {
 document.addEventListener('DOMContentLoaded', () => {
 
   console.log('((( DOMContentLoaded )))')
+
+  // Generate the initial node name as <platform> on <os>
+  const nodeName = `${platform.name} on ${platform.os}`
+  const nodeNameTextField = document.getElementById('nodeName')
+  nodeNameTextField.value = nodeName
 
   // Hide the progress indicator
   hideProgressIndicator()
