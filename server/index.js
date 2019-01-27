@@ -12,6 +12,8 @@ const ram  = require('random-access-memory')
 const hyperdb = require('hyperdb')
 const hyperswarm = require('@hyperswarm/network')
 
+const signalHubServer = require('signalhub/server')
+
 const budo = require('budo')
 const babelify = require('babelify')
 
@@ -19,6 +21,25 @@ const router = express.Router()
 
 const hyperdbs = {}
 
+// Create secure signalhub server.
+const signalHub = signalHubServer({
+  key: fs.readFileSync('server/localhost-key.pem'),
+  cert: fs.readFileSync('server/localhost.pem')
+})
+
+signalHub.on('subscribe', channel => {
+  console.log('[Signal Hub] Subscribe: ', channel)
+})
+
+signalHub.on('broadcast', (channel, message) => {
+  console.log('[Signal Hub] Broadcast: ', channel, message.length)
+})
+
+signalHub.listen(444, 'localhost', () => {
+  console.log(`[Signal Hub] Listening on port ${signalHub.address().port}.`)
+})
+
+// Create secure development web server via budo.
 const server = budo('client/index.js', {
   live: false,
   port: 443,

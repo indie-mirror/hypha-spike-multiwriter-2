@@ -245,7 +245,7 @@ function generateKeys() {
 
       // Also join a WebRTC swarm so that we can peer-to-peer replicate
       // this hypercore (browser to browser).
-      const webSwarm = swarm(signalhub(nodeDiscoveryKeyInHex, ['https://localhost:445']))
+      const webSwarm = swarm(signalhub(nodeDiscoveryKeyInHex, ['https://localhost:444']))
       webSwarm.on('peer', function (remoteWebStream) {
 
         console.log(`WebSwarm [peer for ${nodeReadKeyInHex} (discovery key: ${nodeDiscoveryKeyInHex})] About to replicate.`)
@@ -268,7 +268,7 @@ function generateKeys() {
       //
       // TEST
       //
-      const NUMBER_TO_APPEND = 100
+      const NUMBER_TO_APPEND = 3
       let counter = 0
 
       const intervalToUpdateInMS = 500
