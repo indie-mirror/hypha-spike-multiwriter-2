@@ -32,7 +32,7 @@
   </fieldset>
 
     <fieldset>
-      <legend>This node</legend>
+      <legend>Node status</legend>
 
       <div>
         <label for='domain'>Domain name:</label>
@@ -94,22 +94,6 @@
         <textarea id='errors'>None</textarea>
       </div>
 
-      <h3>Notes</h3>
-
-      <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local hyperdb. It then populates it with some sample data, and:</p>
-
-      <ol>
-        <li>Replicates it to the always-on node via Web Socket.</li>
-        <li>The always-on node joins a <a href='https://github.com/hyperswarm'>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink. (Test with <a href='https://source.ind.ie/hypha/spikes/dat-1/blob/master/native/index.js'>/native</a>)</li>
-        <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink. (Test with <a href='https://ar.al/2019/01/20/hypha-spike-webrtc-1/'>WebRTC 1 spike</a>)</li>
-      </ol>
-
-      <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
-
-      <p>Your passphrase is the only thing that protects your Hypha. It is randomly chosen for you using <a href='https://www.eff.org/dice'>a method called diceware</a> that would take the most sophisticated computers today hundreds of millions of years to crack<sup>1</sup>. If your passphrase is compromised, your Hypha is compromised. If you lose it, you can no longer write to your Hypha. There is no recovery process.  Please save your passphrase in a password manager like <a href='https://www.passwordstore.org/'>pass</a> or <a href='https://1password.com/'>1password</a> and/or make a physical copy of it and store it in a safe place (like a safe, not on a post-it note attached to your monitor). Ideally, also try to memorise it.</p>
-
-      <p><em>1: The passphrase selection process has 100 bits of entropy.</em></p>
-
     </fieldset>
 
     <fieldset>
@@ -137,7 +121,21 @@
 
       <h3>Notes</h3>
 
+      <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local hyperdb. It then populates it with some sample data, and:</p>
+
+      <ol>
+        <li>Replicates it to the always-on node via Web Socket.</li>
+        <li>The always-on node joins a <a href='https://github.com/hyperswarm'>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink. (Test with <a href='https://source.ind.ie/hypha/spikes/dat-1/blob/master/native/index.js'>/native</a>)</li>
+        <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink. (Test with <a href='https://ar.al/2019/01/20/hypha-spike-webrtc-1/'>WebRTC 1 spike</a>)</li>
+      </ol>
+
+      <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
+
+      <p>Your passphrase is the only thing that protects your Hypha. It is randomly chosen for you using <a href='https://www.eff.org/dice'>a method called diceware</a> that would take the most sophisticated computers today hundreds of millions of years to crack<sup>1</sup>. If your passphrase is compromised, your Hypha is compromised. If you lose it, you can no longer write to your Hypha. There is no recovery process.  Please save your passphrase in a password manager like <a href='https://www.passwordstore.org/'>pass</a> or <a href='https://1password.com/'>1password</a> and/or make a physical copy of it and store it in a safe place (like a safe, not on a post-it note attached to your monitor). Ideally, also try to memorise it.</p>
+
       <p>The generated keys are Ed25519 (signing) and Curve25519 (encryption). The <em>hyphalink</em> is the public signing key.</em></p>
+
+      <p><em>1: The passphrase selection process has 100 bits of entropy.</em></p>
 
     </fieldset>
 

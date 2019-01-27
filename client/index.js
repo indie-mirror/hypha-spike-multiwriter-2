@@ -204,6 +204,7 @@ function generateKeys() {
       generatedTextField.value = 'Yes'
 
       // Display the local key for the local writer.
+      console.log(db.local)
       localKeyTextField.value = db.local.key.toString('hex')
 
       const watcher = db.watch('/table', () => {
