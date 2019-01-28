@@ -383,6 +383,10 @@ function onFormSubmit (event) {
     generatePassphrase()
   } else {
     alert(`Todo: sign in with passphrase ${passphraseTextField.value}`)
+
+    // 1. Generate keys using the passphrase
+    // 2. Generate hyperdb with local key based on main key (and verifiable by a different node)
+    // 3. Use hyperswarm to find peers and use out of band messages to request authentication
   }
 }
 
