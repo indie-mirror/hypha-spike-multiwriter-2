@@ -6,6 +6,12 @@
 const session25519 = require('session25519')
 const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
 
+// For client-side Diceware validation
+// (when person is signing in and enters their password manually)
+// Wrap it in starting and ending spaces as we search for word using
+// indexOf surrounded by spaces: ' word '.
+const effDicewareWords = ` ${require('eff-diceware-passphrase/wordlist.json').join(' ')} `
+
 // Hypercore
 const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
@@ -376,7 +382,7 @@ function onFormSubmit (event) {
   if (model.action === kSignUp) {
     generatePassphrase()
   } else {
-    alert('Todo: sign in.')
+    alert(`Todo: sign in with passphrase ${passphraseTextField.value}`)
   }
 }
 
@@ -387,8 +393,35 @@ model = {
 }
 
 function updateInitialState() {
-  model.action = (passphraseTextField.value === '') ? kSignUp : kSignIn
+  const passphrase = passphraseTextField.value
+  model.action = (passphrase === '') ? kSignUp : kSignIn
   changeButton.innerHTML = model.action
+
+  if (model.action === kSignIn) {
+    // Validate that the passphrase exists solely of diceware words
+    // and has at least eight words (as we know the password generation aims
+    // for at least 100 bits of entropy. Seven words has ~90 bits.)
+    const words = passphrase.trim().split(' ')
+    const numWords = words.length
+    const entrophyIsHighEnough = numWords >= 8
+
+    let allWordsInWordList = true
+    for (let i = 0; i < numWords; i++) {
+      const word = ` ${words[i]} `
+      if (effDicewareWords.indexOf(word) === -1) {
+        allWordsInWordList = false
+        break
+      }
+    }
+
+    // if (!entrophyIsHighEnough) { console.log ('Entrophy is not high enough') }
+    // if (!allWordsInWordList) { console.log ('Non-diceware words entered') }
+    // if (entrophyIsHighEnough && allWordsInWordList) { console.log ('Passphrase valid') }
+
+    changeButton.disabled = !(entrophyIsHighEnough && allWordsInWordList)
+  } else {
+    changeButton.disabled = false
+  }
 }
 
 // Main
