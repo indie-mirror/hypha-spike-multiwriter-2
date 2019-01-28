@@ -367,14 +367,29 @@ function generateKeys() {
 }
 
 // Creates passphrase (and keys) when the form is submitted.
-function onCreateNodeButtonPress (event) {
+function onFormSubmit (event) {
 
-  console.log('((( onCreateNodeButtonPress )))')
+  console.log('((( onFormSubmit )))')
 
-  generatePassphrase()
   event.preventDefault()
+
+  if (model.action === kSignUp) {
+    generatePassphrase()
+  } else {
+    alert('Todo: sign in.')
+  }
 }
 
+const kSignIn = 'Sign in'
+const kSignUp = 'Sign up'
+model = {
+  action: kSignUp
+}
+
+function updateInitialState() {
+  model.action = (passphraseTextField.value === '') ? kSignUp : kSignIn
+  changeButton.innerHTML = model.action
+}
 
 // Main
 document.addEventListener('DOMContentLoaded', () => {
@@ -390,8 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
   hideProgressIndicator()
 
   resetForm()
-  setupForm.addEventListener('submit', onCreateNodeButtonPress)
+  setupForm.addEventListener('submit', onFormSubmit)
 
-  // Generate a passphrase at start
-  // generatePassphrase()
+  passphraseTextField.addEventListener('keyup', updateInitialState)
+
 })
