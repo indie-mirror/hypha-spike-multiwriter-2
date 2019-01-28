@@ -129,6 +129,10 @@ Button {
   display: none; /* hide at start */
 }
 
+.pullup {
+  margin-top: -2em !important;
+}
+
 /* Spinkit CSS indeterminate progress indicator */
 /* http://tobiasahlin.com/spinkit/ */
 

@@ -48,6 +48,7 @@ function to_hex(input) {
 
 // HTML elements.
 const setupForm = document.getElementById('setupForm')
+const buttonAndProgressIndicator = document.getElementById('buttonAndProgressIndicator')
 const changeButton = document.getElementById('change')
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
@@ -147,7 +148,7 @@ function hideProgressIndicator() {
 }
 
 function hideButton () {
-  changeButton.style.display = 'none'
+  buttonAndProgressIndicator.style.display = 'none'
 }
 
 function clearOutputFields() {
