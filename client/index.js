@@ -48,16 +48,14 @@ function to_hex(input) {
 
 // HTML elements.
 const setupForm = document.getElementById('setupForm')
-const authoriseButton = document.getElementById('authorise')
 const changeButton = document.getElementById('change')
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
-const indeterminateProgressIndicator2 = document.getElementById('indeterminateProgressIndicator2')
+
 const generatedTextField = document.getElementById('generated')
 const dbContentsTextArea = document.getElementById('hypercoreContents')
 const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
-
 const localKeyTextField = document.getElementById('localKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
@@ -114,7 +112,7 @@ function logError(error) {
 function generatePassphrase () {
   resetForm()
 
-  showChangeButtonProgressIndicator()
+  showProgressIndicator()
 
   // On next tick, so the interface has a chance to update.
   setTimeout(() => {
@@ -124,24 +122,32 @@ function generatePassphrase () {
   }, 0)
 }
 
-function showChangeButtonProgressIndicator() {
+function showDetails() {
+  detailSections = document.getElementsByClassName('details')
+  for (var i = 0; detailSections[i]; i++) {
+    detailSections[i].style.display = 'block'
+  }
+}
+
+function hideDetails() {
+  detailSections = document.getElementsByClassName('details')
+  for (var i = 0; detailSections[i]; i++) {
+    detailSections[i].style.display = 'none'
+  }
+}
+
+function showProgressIndicator() {
   changeButton.style.display = 'none';
   indeterminateProgressIndicator.style.display = 'block';
 }
 
-function hideChangeButtonProgressIndicator() {
+function hideProgressIndicator() {
   changeButton.style.display = 'block';
   indeterminateProgressIndicator.style.display = 'none';
 }
 
-function showAuthoriseButtonProgressIndicator() {
-  authoriseButton.style.display = 'none';
-  indeterminateProgressIndicator2.style.display = 'block';
-}
-
-function hideAuthoriseButtonProgressIndicator() {
-  authoriseButton.style.display = 'block';
-  indeterminateProgressIndicator2.style.display = 'none';
+function hideButton () {
+  changeButton.style.display = 'none'
 }
 
 function clearOutputFields() {
@@ -157,7 +163,9 @@ function generateKeys() {
 
   session25519(domain, passphrase, (error, keys) => {
 
-    hideChangeButtonProgressIndicator()
+    hideProgressIndicator()
+    hideButton()
+    showDetails()
 
     if (error) {
       logError(error.message)
@@ -349,43 +357,6 @@ function generateKeys() {
       console.log('db [Close]')
     })
 
-    // Update the passphrase (and keys) when the change button is pressed.
-    function onChangeButtonPress (event) {
-
-      console.log('((( onChangeButtonPress )))')
-
-      // Let’s remove ourselves as a listener as we will be
-      // re-added on the next refresh.
-      setupForm.removeEventListener('submit', onChangeButtonPress)
-
-      if (updateInterval !== null) {
-        clearInterval(updateInterval)
-        updateInterval = null
-      }
-
-      if (stream !== null) {
-        stream.destroy()
-        stream = null
-      }
-
-      // If a db exists, close it and then generate the new keys/db.
-      if (db !== null) {
-        db.close((error) => {
-          console.log(">>> db is closed. <<<")
-          db = null
-          // db is closed. Error is not really an error.
-          generatePassphrase()
-        })
-        event.preventDefault()
-        return
-      }
-
-      // Otherwise, just go ahead and generate the keys now.
-      generatePassphrase()
-      event.preventDefault()
-    }
-    setupForm.addEventListener('submit', onChangeButtonPress)
-
     // Display the keys.
     publicSigningKeyTextField.value = to_hex(keys.publicSignKey)
     privateSigningKeyTextArea.value = to_hex(keys.secretSignKey)
@@ -393,6 +364,16 @@ function generateKeys() {
     privateEncryptionKeyTextField.value = to_hex(keys.secretKey)
   })
 }
+
+// Creates passphrase (and keys) when the form is submitted.
+function onCreateNodeButtonPress (event) {
+
+  console.log('((( onCreateNodeButtonPress )))')
+
+  generatePassphrase()
+  event.preventDefault()
+}
+
 
 // Main
 document.addEventListener('DOMContentLoaded', () => {
@@ -405,9 +386,11 @@ document.addEventListener('DOMContentLoaded', () => {
   nodeNameTextField.value = nodeName
 
   // Hide the progress indicators
-  hideChangeButtonProgressIndicator()
-  hideAuthoriseButtonProgressIndicator()
+  hideProgressIndicator()
+
+  resetForm()
+  setupForm.addEventListener('submit', onCreateNodeButtonPress)
 
   // Generate a passphrase at start
-  generatePassphrase()
+  // generatePassphrase()
 })

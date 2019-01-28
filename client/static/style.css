@@ -40,7 +40,7 @@ legend {
 
 fieldset > div {
   display: grid;
-  grid-template-columns: 200px 1fr 100px;
+  grid-template-columns: 200px 1fr;
   border: 0;
   margin-bottom: 0.25em;
 }
@@ -91,10 +91,16 @@ footer {
 
 Button {
   position: absolute;
-  top: 0;
-  left: 0.5em;
+  left: calc(50% - 32px);
   height: 26px;
-  width: 64px;
+  width: 7em;
+}
+
+#buttonAndProgressIndicator {
+  position: relative;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  height: 26px;
 }
 
 /* Signals */
@@ -119,19 +125,22 @@ Button {
   color: grey;
 }
 
+.details {
+  display: none; /* hide at start */
+}
+
 /* Spinkit CSS indeterminate progress indicator */
 /* http://tobiasahlin.com/spinkit/ */
 
 .spinner {
-  --height: 26px;
-  --width: 64px;
-  height: var(--height);
-  width: var(--width);
+  height: 26px;
+  width: 64px;
   text-align: center;
   font-size: 10px;
   position: absolute;
-  top: calc((100% - var(--height))/2);
-  left: calc((100% - var(--width))/2);
+  top: calc(50% - 9px);
+  left: 50%;
+  display: none;
 }
 
 .spinner > div {
