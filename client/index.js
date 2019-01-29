@@ -195,7 +195,13 @@ async function initialiseNode(passphrase = null) {
     setupForm.elements.passphrase.value = passphrase
 
     const domain = setupForm.elements.domain.value
-    model.keys = await generateKeys(passphrase, domain)
+    try {
+      model.keys = await generateKeys(passphrase, domain)
+    } catch (error) {
+      console.log('Error: could not generate keys', error)
+      hideProgressIndicator()
+      return
+    }
 
     // Display the keys.
     publicSigningKeyTextField.value = model.keys.nodeReadKeyInHex
