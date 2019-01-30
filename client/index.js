@@ -82,10 +82,47 @@ const viewModel = {
 }
 
 
+//
+// Component: button with progress indicator.
+//
+class ButtonWithProgressIndicator {
+  constructor (elementId) {
+    // Save references to view items.
+    this.element = document.getElementById(elementId)
+    this.innerButton = this.element.querySelector('button')
+    this.progressIndicator = this.element.querySelector('.spinner')
+  }
+
+  set visible (state) {
+    this.element.style.display = state ? 'block' : 'none'
+  }
+
+  set label (title) {
+    this.innerButton.innerHTML = title
+  }
+
+  set enabled (state) {
+    this.innerButton.disabled = state ? false : true
+  }
+
+  showProgress () {
+    this.innerButton.style.display = 'none'
+    this.progressIndicator.style.display = 'block'
+  }
+
+  hideProgress () {
+    this.innerButton.style.display = 'block'
+    this.progressIndicator.style.display = 'none'
+  }
+}
+
+
 // HTML elements.
 const setupForm = document.getElementById('setupForm')
-const buttonAndProgressIndicator = document.getElementById('buttonAndProgressIndicator')
-const changeButton = document.getElementById('change')
+
+const accessButton = new ButtonWithProgressIndicator('accessButton')
+const authoriseButton = new ButtonWithProgressIndicator('authoriseButton')
+
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
 
@@ -165,23 +202,6 @@ function hideDetails() {
 }
 
 
-function showProgressIndicator() {
-  changeButton.style.display = 'none';
-  indeterminateProgressIndicator.style.display = 'block';
-}
-
-
-function hideProgressIndicator() {
-  changeButton.style.display = 'block';
-  indeterminateProgressIndicator.style.display = 'none';
-}
-
-
-function hideButton () {
-  buttonAndProgressIndicator.style.display = 'none'
-}
-
-
 function clearOutputFields() {
   publicSigningKeyTextField.value = ''
   privateSigningKeyTextArea.value = ''
@@ -193,7 +213,7 @@ function clearOutputFields() {
 // Initialise the local node. Either with a new or existing domain.
 async function initialiseNode(passphrase = null) {
 
-  showProgressIndicator()
+  accessButton.showProgress()
 
   if (passphrase === null) {
     await createDomain()
@@ -201,7 +221,7 @@ async function initialiseNode(passphrase = null) {
     await joinExistingDomain(passphrase)
   }
 
-  hideProgressIndicator()
+  accessButton.hideProgress()
 }
 
 
@@ -217,7 +237,7 @@ async function createDomain() {
     model.keys = await generateKeys(model.passphrase, domain)
   } catch (error) {
     console.log('Error: could not generate keys', error)
-    hideProgressIndicator()
+    accessButton.hideProgress()
     throw(error)
   }
 
@@ -228,8 +248,8 @@ async function createDomain() {
 }
 
 function updateView() {
+  accessButton.visible = false
   displayKeys()
-  hideButton()
   showDetails()
 }
 
@@ -281,7 +301,7 @@ async function joinExistingDomain(passphrase) {
 
   } catch (error) {
     console.log('Error: could not generate keys at sign in', error)
-    hideProgressIndicator()
+    accessButton.hideProgress()
     throw(error)
   }
 }
@@ -540,16 +560,14 @@ function onFormSubmit (event) {
   if (viewModel.action === kSignUp) {
     initialiseNode()
   } else {
-
     initialiseNode(passphraseTextField.value)
-
   }
 }
 
 function updateInitialState() {
   const passphrase = passphraseTextField.value
   viewModel.action = (passphrase === '') ? kSignUp : kSignIn
-  changeButton.innerHTML = viewModel.action
+  accessButton.label = viewModel.action
 
   if (viewModel.action === kSignIn) {
     // Validate that the passphrase exists solely of diceware words
@@ -572,9 +590,9 @@ function updateInitialState() {
     // if (!allWordsInWordList) { console.log ('Non-diceware words entered') }
     // if (entrophyIsHighEnough && allWordsInWordList) { console.log ('Passphrase valid') }
 
-    changeButton.disabled = !(entrophyIsHighEnough && allWordsInWordList)
+    accessButton.enabled = (entrophyIsHighEnough && allWordsInWordList)
   } else {
-    changeButton.disabled = false
+    accessButton.enabled = true
   }
 }
 
@@ -589,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
   nodeNameTextField.value = nodeName
 
   // Hide the progress indicators
-  hideProgressIndicator()
+  accessButton.hideProgress()
 
   resetForm()
   setupForm.addEventListener('submit', onFormSubmit)

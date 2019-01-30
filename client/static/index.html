@@ -20,118 +20,134 @@
       </div>
 
       <div>
-          <label for='nodeName'>Node:</label>
-          <input type='text' id='nodeName' value=''>
-    </div>
-
-    <div>
-      <label>Passphrase:</label>
-      <input type='text' id='passphrase'>
-    </div>
-  </fieldset>
-
-  <fieldset class='details'>
-      <div>
-        <label for='publicSigningKey'>Hyphalink:</label>
-        <input type='text' id='publicSigningKey'>
+        <label for='nodeName'>Node:</label>
+        <input type='text' id='nodeName' value=''>
       </div>
-  </fieldset>
 
-  <fieldset>
-    <div id='buttonAndProgressIndicator'>
-      <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
-      <button id='change' type='submit'>Sign up</button>
-      <div id='indeterminateProgressIndicator' class="spinner">
-          <div class="rect1"></div>
-          <div class="rect2"></div>
-          <div class="rect3"></div>
-          <div class="rect4"></div>
-          <div class="rect5"></div>
+      <div>
+        <label>Passphrase:</label>
+        <input type='text' id='passphrase'>
+      </div>
+    </fieldset>
+
+    <fieldset class='details'>
+        <div>
+          <label for='publicSigningKey'>Hyphalink:</label>
+          <input type='text' id='publicSigningKey'>
+        </div>
+    </fieldset>
+
+    <fieldset class='details originNode'>
+      <legend>Authorise other node</legend>
+      <div>
+        <label for='otherNodeLocalReadKey'>Other node read key:</label>
+        <input type='text' id='otherNodeLocalReadKey' value=''>
+      </div>
+      <div id='authoriseButton' class='buttonWithProgressIndicator'>
+          <button type='submit'>Authorise</button>
+          <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
+          <div class='spinner'>
+            <div class='rect1'></div>
+            <div class='rect2'></div>
+            <div class='rect3'></div>
+            <div class='rect4'></div>
+            <div class='rect5'></div>
+          </div>
+        </div>
+    </fieldset>
+
+    <fieldset>
+      <div id='accessButton' class='buttonWithProgressIndicator'>
+        <button type='submit'>Sign up</button>
+        <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
+        <div class='spinner'>
+            <div class='rect1'></div>
+            <div class='rect2'></div>
+            <div class='rect3'></div>
+            <div class='rect4'></div>
+            <div class='rect5'></div>
+          </div>
+        </div>
+    </fieldset>
+
+    <fieldset class='details'>
+      <legend>Node details</legend>
+
+      <div>
+        <label for='generated'>Hyperdb created?</label>
+        <input type='text' id='generated' value='No'>
+      </div>
+
+      <div>
+        <label>Hyperdb signals:</label>
+        <div>
+          <span id='readySignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Ready</span>
+          <span id='changeSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Change</span>
+          <span id='errorSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Error</span>
+          <span id='appendSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Append</span>
+          <span id='downloadSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> ↧</span>
+          <span id='uploadSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> ↥</span>
+          <span id='syncSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Sync</span>
+          <span id='closeSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Close</span>
         </div>
       </div>
-  </fieldset>
 
-  <fieldset class='details pullup'>
-    <h3>Important</h3>
-
-    <p>Your passphrase is the only thing that protects your Hypha. It is randomly chosen for you using <a href='https://www.eff.org/dice'>a method called diceware</a> that would take the most sophisticated computers today hundreds of millions of years to crack<sup>1</sup>. If your passphrase is compromised, your Hypha is compromised. If you lose it, you can no longer write to your Hypha. There is no recovery process.  Please save your passphrase in a password manager like <a href='https://www.passwordstore.org/'>pass</a> or <a href='https://1password.com/'>1password</a> and/or make a physical copy of it and store it in a safe place (like a safe, not on a post-it note attached to your monitor). Ideally, also try to memorise it.</p>
-
-    <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
-
-    <p><em>1: The passphrase selection process has 100 bits of entropy.</em></p>
-
-  </fieldset>
-
-  <fieldset class='details'>
-    <legend>Node details</legend>
-
-    <div>
-      <label for='generated'>Hyperdb created?</label>
-      <input type='text' id='generated' value='No'>
-    </div>
-
-    <div>
-      <label>Hyperdb signals:</label>
       <div>
-        <span id='readySignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Ready</span>
-        <span id='changeSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Change</span>
-        <span id='errorSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Error</span>
-        <span id='appendSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Append</span>
-        <span id='downloadSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> ↧</span>
-        <span id='uploadSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> ↥</span>
-        <span id='syncSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Sync</span>
-        <span id='closeSignal' class='signal'><span class='off'>◯</span><span class='on'>⬤</span> Close</span>
+        <label for='dbContents'>Hyperdb contents</label>
+        <textarea id='hypercoreContents'></textarea>
       </div>
-    </div>
 
-    <div>
-      <label for='dbContents'>Hyperdb contents</label>
-      <textarea id='hypercoreContents'></textarea>
-    </div>
+      <div>
+        <label for='errors'>Errors:</label>
+        <textarea id='errors'>None</textarea>
+      </div>
 
-    <div>
-      <label for='errors'>Errors:</label>
-      <textarea id='errors'>None</textarea>
-    </div>
+      <div>
+        <label for='localReadKey'>Local read key:</label>
+        <input type='text' id='localReadKey' readonly>
+      </div>
 
-    <div>
-      <label for='localReadKey'>Local read key:</label>
-      <input type='text' id='localReadKey' readonly>
-    </div>
+      <div>
+        <label for='localWriteKey'>Local write key:</label>
+        <input type='text' id='localWriteKey' readonly>
+      </div>
 
-    <div>
-      <label for='localWriteKey'>Local write key:</label>
-      <input type='text' id='localWriteKey' readonly>
-    </div>
+      <div>
+        <label for='privateSigningKey'>Private signing key:</label>
+        <textarea id='privateSigningKey' readonly></textarea>
+      </div>
 
-    <div>
-      <label for='privateSigningKey'>Private signing key:</label>
-      <textarea id='privateSigningKey' readonly></textarea>
-    </div>
+      <div>
+        <label for='publicEncryptionKey'>Public encryption key:</label>
+        <input type='text' id='publicEncryptionKey' readonly>
+      </div>
 
-    <div>
-      <label for='publicEncryptionKey'>Public encryption key:</label>
-      <input type='text' id='publicEncryptionKey' readonly>
-    </div>
+      <div>
+        <label for='privateEncryptionKey'>Private encryption key:</label>
+        <input type='text' id='privateEncryptionKey' readonly>
+      </div>
 
-    <div>
-      <label for='privateEncryptionKey'>Private encryption key:</label>
-      <input type='text' id='privateEncryptionKey' readonly>
-    </div>
+      <h3>Important</h3>
 
-    <h3>Notes</h3>
+      <p>Your passphrase is the only thing that protects your Hypha. It is randomly chosen for you using <a href='https://www.eff.org/dice'>a method called diceware</a> that would take the most sophisticated computers today hundreds of millions of years to crack<sup>1</sup>. If your passphrase is compromised, your Hypha is compromised. If you lose it, you can no longer write to your Hypha. There is no recovery process.  Please save your passphrase in a password manager like <a href='https://www.passwordstore.org/'>pass</a> or <a href='https://1password.com/'>1password</a> and/or make a physical copy of it and store it in a safe place (like a safe, not on a post-it note attached to your monitor). Ideally, also try to memorise it.</p>
 
-    <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local hyperdb. It then populates it with some sample data, and:</p>
+      <p>Your domain name and <em>hyphalink</em> are two ways for other people to find your Hypha. The difference is that your hyphalink is decentralised and resilient to censorship. If your domain registrar confiscates or blocks your domain, people will still be able to reach your Hypha as long as there is at least one replica of it on the Internet.</p>
 
-    <ol>
-      <li>Replicates it to the always-on node via Web Socket.</li>
-      <li>The always-on node joins a <a href='https://github.com/hyperswarm'>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink. (Test with <a href='https://source.ind.ie/hypha/spikes/dat-1/blob/master/native/index.js'>/native</a>)</li>
-      <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink. (Test with <a href='https://ar.al/2019/01/20/hypha-spike-webrtc-1/'>WebRTC 1 spike</a>)</li>
-    </ol>
+      <p><em>1: The passphrase selection process has 100 bits of entropy.</em></p>
 
-    <p>The generated keys are Ed25519 (signing) and Curve25519 (encryption). The <em>hyphalink</em> is the public signing key.</em></p>
+      <h3>Notes</h3>
 
-  </fieldset>
+      <p>This spike generates a cryptographically-secure passphrase, derives keys from it, and uses those keys to create a local hyperdb. It then populates it with some sample data, and:</p>
+
+      <ol>
+        <li>Replicates it to the always-on node via Web Socket.</li>
+        <li>The always-on node joins a <a href='https://github.com/hyperswarm'>hyperswarm</a> and replicates with native clients over TCP with peers that have the hyphalink. (Test with <a href='https://source.ind.ie/hypha/spikes/dat-1/blob/master/native/index.js'>/native</a>)</li>
+        <li>Joins a WebRTC swarm and replicates peer-to-peer (browser to browser) over WebRTC with peers that have the hyphalink. (Test with <a href='https://ar.al/2019/01/20/hypha-spike-webrtc-1/'>WebRTC 1 spike</a>)</li>
+      </ol>
+
+      <p>The generated keys are Ed25519 (signing) and Curve25519 (encryption). The <em>hyphalink</em> is the public signing key.</em></p>
+
+    </fieldset>
 
   </form>
 
