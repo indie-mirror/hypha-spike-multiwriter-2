@@ -35,6 +35,10 @@ const platform = require('platform')
 
 // From libsodium.
 function to_hex(input) {
+
+  if (input === null) return 'null'
+  if (input === undefined) return 'undefined'
+
   // Disable input checking for this simple spike.
   // input = _any_to_Uint8Array(null, input, "input");
   var str = "",
@@ -89,7 +93,8 @@ const generatedTextField = document.getElementById('generated')
 const dbContentsTextArea = document.getElementById('hypercoreContents')
 const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
-const localKeyTextField = document.getElementById('localKey')
+const localReadKeyTextField = document.getElementById('localReadKey')
+const localWriteKeyTextField = document.getElementById('localWriteKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
@@ -193,7 +198,7 @@ async function initialiseNode(passphrase = null) {
   if (passphrase === null) {
     await createDomain()
   } else {
-    await joinExistingDomain()
+    await joinExistingDomain(passphrase)
   }
 
   hideProgressIndicator()
@@ -216,31 +221,69 @@ async function createDomain() {
     throw(error)
   }
 
-  // Display the keys.
+  // This is the origin node; pass in the write key also.
+  createDatabase(model.keys.nodeReadKey, model.keys.nodeWriteKey)
+
+  updateView()
+}
+
+function updateView() {
+  displayKeys()
+  hideButton()
+  showDetails()
+}
+
+function displayKeys() {
   publicSigningKeyTextField.value = model.keys.nodeReadKeyInHex
   privateSigningKeyTextArea.value = model.keys.nodeWriteKeyInHex
   publicEncryptionKeyTextField.value = model.keys.publicEncryptionKeyInHex
   privateEncryptionKeyTextField.value = model.keys.privateEncryptionKeyInHex
-
-  createDatabase()
-
-  // Update the view
-  hideButton()
-  showDetails()
 }
 
 
 // Create a local database and authorise it with the primary
 // database for an existing domain.
-async function joinExistingDomain() {
+async function joinExistingDomain(passphrase) {
   //
   // A passphrase has been passed. Replicate an existing domain’s database.
   //
   console.log('Initialising new node with existing domain')
-  alert(`Todo: sign in with passphrase ${passphraseTextField.value}`)
-  // 1. Generate keys using the passphrase
-  // 2. Generate hyperdb with local key based on main key (and verifiable by a different node)
-  // 3. Use hyperswarm to find peers and use out of band messages to request authentication
+
+  const domain = setupForm.elements.domain.value
+  const nodeName = setupForm.elements.nodeName.value
+
+  try {
+    const originalKeys = await generateKeys(passphrase, domain)
+
+    console.log('Original keys', originalKeys)
+
+    const nodeKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
+    model.keys = nodeKeys
+
+    console.log ('===')
+    console.log ('TO-DO')
+    console.log (`Sign into domain ${domain} with global read key ${originalKeys.nodeReadKeyInHex} and global write key ${originalKeys.nodeWriteKeyInHex}`)
+    console.log (`Local read key: ${model.keys.nodeReadKeyInHex}. Local write key: ${model.keys.nodeWriteKeyInHex}`)
+    console.log ('===')
+
+    // We will eventually be generating the local writer based on reproducible keys
+    // but that requires extending hyperdb. Instead, to get multiwriter working, we
+    // are letting hyperdb generate the local writer.
+
+    // TODO: Pass in global read key, local read key, and local write key
+    // ===== to create a local database based on the origin node.
+    originalKeys.nodeWriteKey = null
+    originalKeys.nodeWriteKeyInHex = null
+    model.keys = originalKeys
+    console.log(`About to create database with read key: ${originalKeys.nodeReadKeyInHex}`)
+    createDatabase(originalKeys.nodeReadKey)
+    updateView()
+
+  } catch (error) {
+    console.log('Error: could not generate keys at sign in', error)
+    hideProgressIndicator()
+    throw(error)
+  }
 }
 
 
@@ -253,6 +296,14 @@ function generatePassphrase () {
       resolve(passphrase)
     }, 0)
   })
+}
+
+// Generates derivative key material for a passed read key
+// (Ed25519 public signing key) using the nodeId (the reproducible
+// node identifier based on the properties of the node – currently
+// the platform and client identifiers).
+async function generateDerivativeKeys(readKey, nodeId) {
+  return generateKeys(readKey, nodeId)
 }
 
 
@@ -283,6 +334,8 @@ function generateKeys(passphrase, domain) {
       const nodeDiscoveryKey = discoveryKey(nodeReadKey)
       const nodeDiscoveryKeyInHex = nodeDiscoveryKey.toString('hex')
 
+      // TODO: Iterate on terminology. This routine is now used to
+      // generate keys for the origin node as well as writer nodes.
       const nodeKeys = {
         nodeReadKey,
         nodeDiscoveryKey,
@@ -299,20 +352,26 @@ function generateKeys(passphrase, domain) {
   })
 }
 
-
-function createDatabase() {
+// TODO: Make this accept the global read key, global secret key, and local read key, and local write key as parameters.
+// ===== If the global secret key is not passed in and the local read and write keys are, then we create a writer based
+//       on an existing database (using its global read key).
+//
+// TODO: Update hyperDB so that we can pass in the local key and local secret key to the local writer.
+// ===== Matthias suggested we do this using a factory function passed into the constructor.
+function createDatabase(readKey, writeKey = null) {
   let db = null
   let stream = null
   let updateInterval = null
 
-  console.log(`Creating new hyperdb with read key ${model.nodeReadKeyInHex} and write key ${model.nodeWriteKeyInHex}`)
+  console.log(`Creating new hyperdb with read key ${to_hex(readKey)} and write key ${to_hex(writeKey)}`)
+  console.log(`This node ${(writeKey === null) ? 'is not': 'is'} an origin node.`)
 
   // Create a new hypercore using the newly-generated key material.
-  db = hyperdb((filename) => ram(filename), model.nodeReadKey, {
+  db = hyperdb((filename) => ram(filename), readKey, {
     createIfMissing: false,
     overwrite: false,
     valueEncoding: 'json',
-    secretKey: model.nodeWriteKey,
+    secretKey: writeKey,
     storeSecretKey: false
     // Note: do not define onWrite(). Leads to errors.
   })
@@ -324,12 +383,20 @@ function createDatabase() {
 
     console.log(`db: [Ready] ${dbKeyInHex}`)
 
+    // Update the model with the actual key material from the database.
+    model.keys.nodeReadKey = db.key
+    model.keys.nodeReadKeyInHex = to_hex(db.key)
+    model.keys.nodeWriteKey = db.secretKey
+    model.keys.nodeWriteKeyInHex = to_hex(db.secretKey)
+    displayKeys()
+
     blinkSignal('ready')
     generatedTextField.value = 'Yes'
 
     // Display the local key for the local writer.
     console.log(db.local)
-    localKeyTextField.value = db.local.key.toString('hex')
+    localReadKeyTextField.value = db.local.key.toString('hex')
+    localWriteKeyTextField.value = db.local.secretKey.toString('hex')
 
     const watcher = db.watch('/table', () => {
       console.log('Database updated!')
