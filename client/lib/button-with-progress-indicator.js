@@ -15,8 +15,6 @@ class ButtonWithProgressIndicator extends EventEmitter {
 
     // Register for the click event
     this.innerButton.addEventListener('click', (event) => {
-      console.log(`${this.innerButton.innerHTML} clicked!`)
-      console.log(this)
       this.emit('click')
     })
   }
