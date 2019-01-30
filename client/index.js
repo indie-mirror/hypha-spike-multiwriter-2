@@ -184,48 +184,63 @@ function clearOutputFields() {
   privateEncryptionKeyTextField.value = ''
 }
 
+
+// Initialise the local node. Either with a new or existing domain.
 async function initialiseNode(passphrase = null) {
 
   showProgressIndicator()
 
   if (passphrase === null) {
-    console.log('Initialising new node with new domain')
-
-    const passphrase = await generatePassphrase()
-    setupForm.elements.passphrase.value = passphrase
-
-    const domain = setupForm.elements.domain.value
-    try {
-      model.keys = await generateKeys(passphrase, domain)
-    } catch (error) {
-      console.log('Error: could not generate keys', error)
-      hideProgressIndicator()
-      return
-    }
-
-    // Display the keys.
-    publicSigningKeyTextField.value = model.keys.nodeReadKeyInHex
-    privateSigningKeyTextArea.value = model.keys.nodeWriteKeyInHex
-    publicEncryptionKeyTextField.value = model.keys.publicEncryptionKeyInHex
-    privateEncryptionKeyTextField.value = model.keys.privateEncryptionKeyInHex
-
-    createDatabase()
-
-    // Update the view
-    hideButton()
-    showDetails()
+    await createDomain()
   } else {
-    //
-    // A passphrase has been passed. Replicate an existing domain’s database.
-    //
-    console.log('Initialising new node with existing domain')
-    alert(`Todo: sign in with passphrase ${passphraseTextField.value}`)
-    // 1. Generate keys using the passphrase
-    // 2. Generate hyperdb with local key based on main key (and verifiable by a different node)
-    // 3. Use hyperswarm to find peers and use out of band messages to request authentication
+    await joinExistingDomain()
   }
 
   hideProgressIndicator()
+}
+
+
+// Create a new domain and a local node for it.
+async function createDomain() {
+  console.log('Initialising new node with new domain')
+
+  model.passphrase = await generatePassphrase()
+  setupForm.elements.passphrase.value = model.passphrase
+
+  const domain = setupForm.elements.domain.value
+  try {
+    model.keys = await generateKeys(model.passphrase, domain)
+  } catch (error) {
+    console.log('Error: could not generate keys', error)
+    hideProgressIndicator()
+    throw(error)
+  }
+
+  // Display the keys.
+  publicSigningKeyTextField.value = model.keys.nodeReadKeyInHex
+  privateSigningKeyTextArea.value = model.keys.nodeWriteKeyInHex
+  publicEncryptionKeyTextField.value = model.keys.publicEncryptionKeyInHex
+  privateEncryptionKeyTextField.value = model.keys.privateEncryptionKeyInHex
+
+  createDatabase()
+
+  // Update the view
+  hideButton()
+  showDetails()
+}
+
+
+// Create a local database and authorise it with the primary
+// database for an existing domain.
+async function joinExistingDomain() {
+  //
+  // A passphrase has been passed. Replicate an existing domain’s database.
+  //
+  console.log('Initialising new node with existing domain')
+  alert(`Todo: sign in with passphrase ${passphraseTextField.value}`)
+  // 1. Generate keys using the passphrase
+  // 2. Generate hyperdb with local key based on main key (and verifiable by a different node)
+  // 3. Use hyperswarm to find peers and use out of band messages to request authentication
 }
 
 
