@@ -1,12 +1,24 @@
 //
 // Component: button with progress indicator.
 //
-class ButtonWithProgressIndicator {
+
+const EventEmitter = require('events').EventEmitter
+
+class ButtonWithProgressIndicator extends EventEmitter {
   constructor (elementId) {
+    super()
+
     // Save references to view items.
     this.element = document.getElementById(elementId)
-    this.innerButton = this.element.querySelector('button')
     this.progressIndicator = this.element.querySelector('.spinner')
+    this.innerButton = this.element.querySelector('button')
+
+    // Register for the click event
+    this.innerButton.addEventListener('click', (event) => {
+      console.log(`${this.innerButton.innerHTML} clicked!`)
+      console.log(this)
+      this.emit('click')
+    })
   }
 
   set visible (state) {

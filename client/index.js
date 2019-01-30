@@ -517,20 +517,6 @@ function createDatabase(readKey, writeKey = null) {
 
 }
 
-// Creates passphrase (and keys) when the form is submitted.
-function onFormSubmit (event) {
-
-  console.log('((( onFormSubmit )))')
-
-  event.preventDefault()
-
-  if (viewModel.action === kSignUp) {
-    initialiseNode()
-  } else {
-    initialiseNode(passphraseTextField.value)
-  }
-}
-
 function updateInitialState() {
   const passphrase = passphraseTextField.value
   viewModel.action = (passphrase === '') ? kSignUp : kSignIn
@@ -573,11 +559,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const nodeNameTextField = document.getElementById('nodeName')
   nodeNameTextField.value = nodeName
 
-  // Hide the progress indicators
-  accessButton.hideProgress()
-
   resetForm()
-  setupForm.addEventListener('submit', onFormSubmit)
+
+  // Handle sign up or sign in button.
+  accessButton.on('click', event => {
+    if (viewModel.action === kSignUp) {
+      initialiseNode()
+    } else {
+      initialiseNode(passphraseTextField.value)
+    }
+  })
 
   passphraseTextField.addEventListener('keyup', updateInitialState)
 
