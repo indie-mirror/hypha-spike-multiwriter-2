@@ -6,13 +6,7 @@
 const session25519 = require('session25519')
 const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
 
-// For client-side Diceware validation
-// (when person is signing in and enters their password manually)
-// Wrap it in starting and ending spaces as we search for word using
-// indexOf surrounded by spaces: ' word '.
-const effDicewareWords = ` ${require('eff-diceware-passphrase/wordlist.json').join(' ')} `
-
-// Hypercore
+// Database
 const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
 const hypercore = require('hypercore')
@@ -33,133 +27,18 @@ const nextId = require('monotonic-timestamp-base36')
 
 const platform = require('platform')
 
-const ButtonWithProgressIndicator = require('./lib/button-with-progress-indicator')
-
+// App-specific
 const { to_hex } = require('./lib/helpers')
+const View = require('./view')
 
-//
-// Model
-//
-
-const model = {
-  keys: {
-    nodeReadKeyInHex: null,
-    nodeWriteKeyInHex: null,
-    nodeReadKey: null,
-    nodeWriteKey: null,
-    nodeDiscoveryKey: null,
-    nodeDiscoveryKeyInHex: null
-  }
-}
-
-//
-// viewModel
-//
-
-const kSignIn = 'Sign in'
-const kSignUp = 'Sign up'
-const viewModel = {
-  action: kSignUp
-}
-
-
-// HTML elements.
-const setupForm = document.getElementById('setupForm')
-
-const accessButton = new ButtonWithProgressIndicator('accessButton')
-const authoriseButton = new ButtonWithProgressIndicator('authoriseButton')
-
-const passphraseTextField = document.getElementById('passphrase')
-const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
-
-const generatedTextField = document.getElementById('generated')
-const dbContentsTextArea = document.getElementById('hypercoreContents')
-const errorsTextArea = document.getElementById('errors')
-const publicSigningKeyTextField = document.getElementById('publicSigningKey')
-const localReadKeyTextField = document.getElementById('localReadKey')
-const localWriteKeyTextField = document.getElementById('localWriteKey')
-const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
-const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
-const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
-
-const signals = ['ready', 'change', 'error', 'append', 'download', 'upload', 'sync', 'close']
-
-function setSignalVisible(signal, state) {
-  const offState = document.querySelector(`#${signal}Signal > .off`)
-  const onState = document.querySelector(`#${signal}Signal > .on`)
-
-  if (state) {
-    onState.classList.add('visible')
-    offState.classList.add('invisible')
-  } else {
-    onState.classList.remove('visible')
-    offState.classList.remove('invisible')
-  }
-}
-
-function resetSignals() {
-  signals.forEach((signal) => {
-    setSignalVisible(signal, false)
-  })
-}
-
-function blinkSignal(signal) {
-  setSignalVisible(signal, true)
-
-  // Keep the ready signal lit throughout. All others, blink.
-  if (signal !== 'ready') {
-    setTimeout(() => {
-      setSignalVisible(signal, false)
-    }, 333)
-  }
-}
-
-function resetForm() {
-  passphraseTextField.value = ''
-  publicSigningKeyTextField.value = ''
-  generatedTextField.value = 'No'
-  resetSignals()
-  dbContentsTextArea.value = ''
-  errorsTextArea.value = ''
-  privateSigningKeyTextArea.value = ''
-  publicEncryptionKeyTextField.value = ''
-  privateEncryptionKeyTextField.value = ''
-}
-
-
-function logError(error) {
-  errorsTextArea.value += error
-}
-
-
-function showDetails() {
-  detailSections = document.getElementsByClassName('details')
-  for (var i = 0; detailSections[i]; i++) {
-    detailSections[i].style.display = 'block'
-  }
-}
-
-
-function hideDetails() {
-  detailSections = document.getElementsByClassName('details')
-  for (var i = 0; detailSections[i]; i++) {
-    detailSections[i].style.display = 'none'
-  }
-}
-
-
-function clearOutputFields() {
-  publicSigningKeyTextField.value = ''
-  privateSigningKeyTextArea.value = ''
-  publicEncryptionKeyTextField.value = ''
-  privateEncryptionKeyTextField.value = ''
-}
+const model = require('./model')
+const view = new View(model)
 
 
 // Initialise the local node. Either with a new or existing domain.
 async function initialiseNode(passphrase = null) {
 
-  accessButton.showProgress()
+  view.showAccessProgress()
 
   if (passphrase === null) {
     await createDomain()
@@ -167,7 +46,7 @@ async function initialiseNode(passphrase = null) {
     await joinExistingDomain(passphrase)
   }
 
-  accessButton.hideProgress()
+  view.hideAccessProgress()
 }
 
 
@@ -176,34 +55,23 @@ async function createDomain() {
   console.log('Initialising new node with new domain')
 
   model.passphrase = await generatePassphrase()
-  setupForm.elements.passphrase.value = model.passphrase
 
-  const domain = setupForm.elements.domain.value
+  view.showPassphrase()
+
+  const domain = view.domain
+
   try {
     model.keys = await generateKeys(model.passphrase, domain)
   } catch (error) {
     console.log('Error: could not generate keys', error)
-    accessButton.hideProgress()
+    view.hideAccessProgress()
     throw(error)
   }
 
   // This is the origin node; pass in the write key also.
   createDatabase(model.keys.nodeReadKey, model.keys.nodeWriteKey)
 
-  updateView()
-}
-
-function updateView() {
-  accessButton.visible = false
-  displayKeys()
-  showDetails()
-}
-
-function displayKeys() {
-  publicSigningKeyTextField.value = model.keys.nodeReadKeyInHex
-  privateSigningKeyTextArea.value = model.keys.nodeWriteKeyInHex
-  publicEncryptionKeyTextField.value = model.keys.publicEncryptionKeyInHex
-  privateEncryptionKeyTextField.value = model.keys.privateEncryptionKeyInHex
+  view.showDetails()
 }
 
 
@@ -243,11 +111,11 @@ async function joinExistingDomain(passphrase) {
     model.keys = originalKeys
     console.log(`About to create database with read key: ${originalKeys.nodeReadKeyInHex}`)
     createDatabase(originalKeys.nodeReadKey)
-    updateView()
+    view.showDetails()
 
   } catch (error) {
     console.log('Error: could not generate keys at sign in', error)
-    accessButton.hideProgress()
+    view.hideAccessProgress()
     throw(error)
   }
 }
@@ -263,6 +131,7 @@ function generatePassphrase () {
     }, 0)
   })
 }
+
 
 // Generates derivative key material for a passed read key
 // (Ed25519 public signing key) using the nodeId (the reproducible
@@ -282,7 +151,7 @@ function generateKeys(passphrase, domain) {
     session25519(domain, passphrase, (error, keys) => {
 
       if (error) {
-        logError(error.message)
+        view.logError(error.message)
         reject(error)
       }
 
@@ -317,6 +186,7 @@ function generateKeys(passphrase, domain) {
     })
   })
 }
+
 
 // TODO: Make this accept the global read key, global secret key, and local read key, and local write key as parameters.
 // ===== If the global secret key is not passed in and the local read and write keys are, then we create a writer based
@@ -354,28 +224,26 @@ function createDatabase(readKey, writeKey = null) {
     model.keys.nodeReadKeyInHex = to_hex(db.key)
     model.keys.nodeWriteKey = db.secretKey
     model.keys.nodeWriteKeyInHex = to_hex(db.secretKey)
-    displayKeys()
+    model.keys.localReadKeyInHex = db.local.key.toString('hex')
+    model.keys.localWriteKeyInHex = db.local.secretKey.toString('hex')
 
-    blinkSignal('ready')
-    generatedTextField.value = 'Yes'
+    view.showDatabaseIsReady()
 
     // Display the local key for the local writer.
     console.log(db.local)
-    localReadKeyTextField.value = db.local.key.toString('hex')
-    localWriteKeyTextField.value = db.local.secretKey.toString('hex')
 
     const watcher = db.watch('/table', () => {
       console.log('Database updated!')
       db.get('/table', (error, values) => {
         console.log(values)
 
-        blinkSignal('change')
+        view.blinkSignal('change')
         console.log('db [change: get]', values)
 
-        // New data is available on the db. Display it on the page.
+        // New data is available on the db. Display it on the view.
         const obj = values[0].value
         for (let [key, value] of Object.entries(obj)) {
-          dbContentsTextArea.value += `${key}: ${value}\n`
+          view.addContent(`${key}: ${value}\n`)
         }
       })
     })
@@ -452,7 +320,7 @@ function createDatabase(readKey, writeKey = null) {
       db.put('/table', obj, (error, o) => {
         console.log('Put callback')
         if (error) {
-          logError(error)
+          view.logError(error)
           return
         }
         console.log('  Feed', o.feed)
@@ -465,90 +333,49 @@ function createDatabase(readKey, writeKey = null) {
 
   db.on('error', (error) => {
     console.log(`db [Error] ${error}`)
-    blinkSignal('error')
-    logError(error)
+    view.blinkSignal('error')
+    view.logError(error)
   })
 
   db.on('download', (index, data) => {
-    blinkSignal('download')
+    view.blinkSignal('download')
     console.log(`db [Download] index = ${index}, data = ${data}`)
   })
 
   db.on('upload', (index, data) => {
-    blinkSignal('upload')
+    view.blinkSignal('upload')
     console.log(`db [Upload] index = ${index}, data = ${data}`)
   })
 
   db.on('append', () => {
-    blinkSignal('append')
+    view.blinkSignal('append')
     console.log('db [Append]')
   })
 
   db.on('sync', () => {
-    blinkSignal('sync')
+    view.blinkSignal('sync')
     console.log('db [Sync]')
   })
 
   db.on('close', () => {
-    blinkSignal('close')
+    view.blinkSignal('close')
     console.log('db [Close]')
   })
 
 }
 
-function updateInitialState() {
-  const passphrase = passphraseTextField.value
-  viewModel.action = (passphrase === '') ? kSignUp : kSignIn
-  accessButton.label = viewModel.action
-
-  if (viewModel.action === kSignIn) {
-    // Validate that the passphrase exists solely of diceware words
-    // and has at least eight words (as we know the password generation aims
-    // for at least 100 bits of entropy. Seven words has ~90 bits.)
-    const words = passphrase.trim().split(' ')
-    const numWords = words.length
-    const entrophyIsHighEnough = numWords >= 8
-
-    let allWordsInWordList = true
-    for (let i = 0; i < numWords; i++) {
-      const word = ` ${words[i]} `
-      if (effDicewareWords.indexOf(word) === -1) {
-        allWordsInWordList = false
-        break
-      }
-    }
-
-    // if (!entrophyIsHighEnough) { console.log ('Entrophy is not high enough') }
-    // if (!allWordsInWordList) { console.log ('Non-diceware words entered') }
-    // if (entrophyIsHighEnough && allWordsInWordList) { console.log ('Passphrase valid') }
-
-    accessButton.enabled = (entrophyIsHighEnough && allWordsInWordList)
-  } else {
-    accessButton.enabled = true
-  }
-}
 
 // Main
-document.addEventListener('DOMContentLoaded', () => {
 
-  console.log('((( DOMContentLoaded )))')
-
+view.on('ready', () => {
   // Generate the initial node name as <platform> on <os>
-  const nodeName = `${platform.name} on ${platform.os}`
-  const nodeNameTextField = document.getElementById('nodeName')
-  nodeNameTextField.value = nodeName
+  view.nodeName = `${platform.name} on ${platform.os}`
+})
 
-  resetForm()
+view.on('signUp', () => {
+  initialiseNode()
+})
 
-  // Handle sign up or sign in button.
-  accessButton.on('click', event => {
-    if (viewModel.action === kSignUp) {
-      initialiseNode()
-    } else {
-      initialiseNode(passphraseTextField.value)
-    }
-  })
-
-  passphraseTextField.addEventListener('keyup', updateInitialState)
-
+view.on('signIn', (passphrase) => {
+  initialiseNode(passphrase)
 })
