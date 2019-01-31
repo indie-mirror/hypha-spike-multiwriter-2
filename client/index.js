@@ -188,6 +188,26 @@ function generateKeys(passphrase, domain) {
 }
 
 
+function addRowToDatabase() {
+  const key = nextId()
+  const value = `(${model.localCounter}) ${model.nodeName}`
+  let obj = {}
+  obj[key] = value
+  model.db.put('/table', obj, (error, o) => {
+    console.log('Put callback')
+    if (error) {
+      view.logError(error)
+      return
+    }
+    model.localCounter++
+    console.log('  Feed', o.feed)
+    console.log('  Sequence:', o.seq)
+    console.log('  Key:', o.key)
+    console.log('  Value:', o.value)
+  })
+}
+
+
 // TODO: Make this accept the global read key, global secret key, and local read key, and local write key as parameters.
 // ===== If the global secret key is not passed in and the local read and write keys are, then we create a writer based
 //       on an existing database (using its global read key).
@@ -211,7 +231,6 @@ function createDatabase(readKey, writeKey = null) {
     storeSecretKey: false
     // Note: do not define onWrite(). Leads to errors.
   })
-
 
   db.on('ready', () => {
     const dbKey = db.key
@@ -305,32 +324,19 @@ function createDatabase(readKey, writeKey = null) {
     // TEST
     //
     const NUMBER_TO_APPEND = 3
-    let localCounter = 0
 
     const intervalToUpdateInMS = 500
+    let counter = 0
     updateInterval = setInterval(() => {
-      localCounter++
-      if (localCounter === NUMBER_TO_APPEND) {
+      counter++
+      if (counter === NUMBER_TO_APPEND) {
         console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
         clearInterval(updateInterval)
         updateInterval = null
       }
 
-      const key = nextId()
-      const value = `(${localCounter}) ${model.nodeName}`
-      let obj = {}
-      obj[key] = value
-      db.put('/table', obj, (error, o) => {
-        console.log('Put callback')
-        if (error) {
-          view.logError(error)
-          return
-        }
-        console.log('  Feed', o.feed)
-        console.log('  Sequence:', o.seq)
-        console.log('  Key:', o.key)
-        console.log('  Value:', o.value)
-      })
+      addRowToDatabase()
+
     }, intervalToUpdateInMS)
   })
 
@@ -395,5 +401,5 @@ view.on('authorise', (otherNodeReadKey) => {
 })
 
 view.on('write', () => {
-  console.log('Write: TODO')
+  addRowToDatabase()
 })

@@ -3,6 +3,7 @@
 //
 
 module.exports = {
+  localCounter: 0,
   keys: {
     nodeReadKeyInHex: null,
     nodeWriteKeyInHex: null,
