@@ -272,7 +272,7 @@ function createDatabase(readKey, writeKey = null) {
       remoteStream,
       (error) => {
         console.log(`Pipe closed for ${dbKeyInHex}`, error && error.message)
-        logError(error.message)
+        view.logError(error.message)
       }
     )
 
@@ -378,4 +378,8 @@ view.on('signUp', () => {
 
 view.on('signIn', (passphrase) => {
   initialiseNode(passphrase)
+})
+
+view.on('authorise', (otherNodeReadKey) => {
+  alert(`Authorisation request for ${otherNodeReadKey}`)
 })

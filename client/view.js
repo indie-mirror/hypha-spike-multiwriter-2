@@ -11,7 +11,6 @@ const ButtonWithProgressIndicator = require('./lib/button-with-progress-indicato
 // indexOf surrounded by spaces: ' word '.
 const effDicewareWords = ` ${require('eff-diceware-passphrase/wordlist.json').join(' ')} `
 
-
 //
 // viewModel
 //
@@ -27,6 +26,7 @@ const setupForm = document.getElementById('setupForm')
 const nodeNameTextField = document.getElementById('nodeName')
 const accessButton = new ButtonWithProgressIndicator('accessButton')
 const authoriseButton = new ButtonWithProgressIndicator('authoriseButton')
+const otherNodeLocalReadKeyInHexTextField = document.getElementById('otherNodeLocalReadKeyInHex')
 
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
@@ -54,7 +54,11 @@ class View extends EventEmitter {
     document.addEventListener('DOMContentLoaded', () => {
       this.resetForm()
 
+      this.validatePassphrase()
+      this.validateOtherNodeLocalReadKey()
+
       passphraseTextField.addEventListener('keyup', this.validatePassphrase)
+      otherNodeLocalReadKeyInHexTextField.addEventListener('keyup', this.validateOtherNodeLocalReadKey)
 
       // Handle sign up or sign in button.
       accessButton.on('click', event => {
@@ -63,6 +67,11 @@ class View extends EventEmitter {
         } else {
           this.emit('signIn', passphraseTextField.value)
         }
+      })
+
+      // Handle authorise button.
+      authoriseButton.on('click', event => {
+        this.emit('authorise', otherNodeLocalReadKeyInHexTextField.value)
       })
 
       this.emit('ready')
@@ -74,9 +83,45 @@ class View extends EventEmitter {
     nodeNameTextField.value = name
   }
 
+
   get domain () {
     return setupForm.elements.domain.value
   }
+
+
+  validateOtherNodeLocalReadKey() {
+    // Validates that the read key you want to authorise is 64 bytes and hexadecimal.
+    const otherNodeReadKeyInHex = otherNodeLocalReadKeyInHexTextField.value
+    const publicReadKeyInHex = publicSigningKeyTextField.value
+    const localReadKeyInHex = localReadKeyTextField.value
+
+    if (otherNodeReadKeyInHex.length !== 64) {
+      console.log('Other node local read key is the wrong size', otherNodeReadKeyInHex.length)
+      authoriseButton.enabled = false
+      return
+    }
+
+    if (otherNodeReadKeyInHex.match(/^([0-9, a-f]+)$/) === null) {
+      console.log('Non-hexadecimal digits present in local read key; cannot be valid.')
+      authoriseButton.enabled = false
+      return
+    }
+
+    if (otherNodeReadKeyInHex === publicReadKeyInHex) {
+      console.log('The key to authorise cannot be the public read key for this domain.')
+      authoriseButton.enabled = false
+      return
+    }
+
+    if (otherNodeReadKeyInHex === localReadKeyInHex) {
+      console.log('The key to authorise cannot be the local read key for this domain.')
+      authoriseButton.enabled = false
+      return
+    }
+
+    authoriseButton.enabled = true
+  }
+
 
   validatePassphrase () {
     const passphrase = passphraseTextField.value
