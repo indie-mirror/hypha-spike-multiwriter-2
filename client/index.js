@@ -305,19 +305,19 @@ function createDatabase(readKey, writeKey = null) {
     // TEST
     //
     const NUMBER_TO_APPEND = 3
-    let counter = 0
+    let localCounter = 0
 
     const intervalToUpdateInMS = 500
     updateInterval = setInterval(() => {
-      counter++
-      if (counter === NUMBER_TO_APPEND) {
+      localCounter++
+      if (localCounter === NUMBER_TO_APPEND) {
         console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
         clearInterval(updateInterval)
         updateInterval = null
       }
 
       const key = nextId()
-      const value = Math.random()*1000000000000000000 // simple random number
+      const value = `(${localCounter}) ${model.nodeName}`
       let obj = {}
       obj[key] = value
       db.put('/table', obj, (error, o) => {
@@ -372,7 +372,8 @@ function createDatabase(readKey, writeKey = null) {
 
 view.on('ready', () => {
   // Generate the initial node name as <platform> on <os>
-  view.nodeName = `${platform.name} on ${platform.os}`
+  model.nodeName = `${platform.name} on ${platform.os}`
+  view.nodeName = model.nodeName
 })
 
 view.on('signUp', () => {
@@ -391,4 +392,8 @@ view.on('authorise', (otherNodeReadKey) => {
 
     console.log(authorisation)
   })
+})
+
+view.on('write', () => {
+  console.log('Write: TODO')
 })
