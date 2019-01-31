@@ -219,6 +219,9 @@ function createDatabase(readKey, writeKey = null) {
 
     console.log(`db: [Ready] ${dbKeyInHex}`)
 
+    // Add the database to the model.
+    model.db = db
+
     // Update the model with the actual key material from the database.
     model.keys.nodeReadKey = db.key
     model.keys.nodeReadKeyInHex = to_hex(db.key)
@@ -381,5 +384,11 @@ view.on('signIn', (passphrase) => {
 })
 
 view.on('authorise', (otherNodeReadKey) => {
-  alert(`Authorisation request for ${otherNodeReadKey}`)
+  console.log(`Authorisation request for ${otherNodeReadKey.toString('hex')}`)
+
+  model.db.authorize(otherNodeReadKey, (error, authorisation) => {
+    if (error) throw error
+
+    console.log(authorisation)
+  })
 })

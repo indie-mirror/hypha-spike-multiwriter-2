@@ -71,7 +71,7 @@ class View extends EventEmitter {
 
       // Handle authorise button.
       authoriseButton.on('click', event => {
-        this.emit('authorise', otherNodeLocalReadKeyInHexTextField.value)
+        this.emit('authorise', Buffer.from(otherNodeLocalReadKeyInHexTextField.value, 'hex'))
       })
 
       this.emit('ready')
