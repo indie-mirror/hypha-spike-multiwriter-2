@@ -33,6 +33,7 @@ const indeterminateProgressIndicator = document.getElementById('indeterminatePro
 
 const generatedTextField = document.getElementById('generated')
 const dbContentsTextArea = document.getElementById('hypercoreContents')
+const writeButton = new ButtonWithProgressIndicator('writeButton')
 const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const localReadKeyTextField = document.getElementById('localReadKey')
@@ -60,7 +61,7 @@ class View extends EventEmitter {
       passphraseTextField.addEventListener('keyup', this.validatePassphrase)
       otherNodeLocalReadKeyInHexTextField.addEventListener('keyup', this.validateOtherNodeLocalReadKey)
 
-      // Handle sign up or sign in button.
+      // Sign up / sign in button.
       accessButton.on('click', event => {
         if (viewModel.action === kSignUp) {
           this.emit('signUp')
@@ -69,9 +70,14 @@ class View extends EventEmitter {
         }
       })
 
-      // Handle authorise button.
+      // Authorise button.
       authoriseButton.on('click', event => {
         this.emit('authorise', Buffer.from(otherNodeLocalReadKeyInHexTextField.value, 'hex'))
+      })
+
+      // Write button.
+      writeButton.on('click', event => {
+        this.emit('write')
       })
 
       this.emit('ready')
