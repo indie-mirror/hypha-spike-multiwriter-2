@@ -1,5 +1,5 @@
 //
-// Hypha client
+// Hypha node
 //
 
 // Initial key generation
