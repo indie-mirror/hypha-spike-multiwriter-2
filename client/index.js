@@ -91,26 +91,24 @@ async function joinExistingDomain(passphrase) {
 
     console.log('Original keys', originalKeys)
 
-    const nodeKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
-    model.keys = nodeKeys
-
-    console.log ('===')
-    console.log ('TO-DO')
-    console.log (`Sign into domain ${domain} with global read key ${originalKeys.nodeReadKeyInHex} and global write key ${originalKeys.nodeWriteKeyInHex}`)
-    console.log (`Local read key: ${model.keys.nodeReadKeyInHex}. Local write key: ${model.keys.nodeWriteKeyInHex}`)
-    console.log ('===')
-
-    // We will eventually be generating the local writer based on reproducible keys
-    // but that requires extending hyperdb. Instead, to get multiwriter working, we
-    // are letting hyperdb generate the local writer.
-
-    // TODO: Pass in global read key, local read key, and local write key
-    // ===== to create a local database based on the origin node.
-    originalKeys.nodeWriteKey = null
-    originalKeys.nodeWriteKeyInHex = null
+    const localKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
     model.keys = originalKeys
-    console.log(`About to create database with read key: ${originalKeys.nodeReadKeyInHex}`)
-    createDatabase(originalKeys.nodeReadKey)
+
+    // Clear the secret key as we don’t need it for non-origin nodes.
+    model.keys.nodeWriteKey = null
+    model.keys.nodeWriteKeyInHex = null
+
+    model.keys.nodeLocalReadKey = localKeys.nodeReadKey
+    model.keys.nodeLocalReadKeyInHex = localKeys.nodeReadKeyInHex
+    model.keys.nodeLocalWriteKey = localKeys.nodeWriteKey
+    model.keys.nodeLocalWriteKeyInHex = localKeys.nodeWriteKeyInHex
+
+    console.log ('===')
+    console.log (`Sign into domain ${domain} with global read key ${originalKeys.nodeReadKeyInHex} and global write key ${originalKeys.nodeWriteKeyInHex}`)
+    console.log (`Local read key: ${localKeys.nodeReadKeyInHex}. Local write key: ${localKeys.nodeWriteKeyInHex}`)
+    console.log ('===')
+
+    createDatabase(originalKeys.nodeReadKey, null, localKeys.nodeReadKey, localKeys.nodeWriteKey)
     view.showDetails()
 
   } catch (error) {
@@ -214,7 +212,7 @@ function addRowToDatabase() {
 //
 // TODO: Update hyperDB so that we can pass in the local key and local secret key to the local writer.
 // ===== Matthias suggested we do this using a factory function passed into the constructor.
-function createDatabase(readKey, writeKey = null) {
+function createDatabase(readKey, writeKey = null, localReadKey = null, localWriteKey = null) {
   let db = null
   let stream = null
   let updateInterval = null
@@ -228,7 +226,9 @@ function createDatabase(readKey, writeKey = null) {
     overwrite: false,
     valueEncoding: 'json',
     secretKey: writeKey,
-    storeSecretKey: false
+    storeSecretKey: false,
+    localKey: localReadKey,
+    localSecretKey: localWriteKey,
     // Note: do not define onWrite(). Leads to errors.
   })
 
