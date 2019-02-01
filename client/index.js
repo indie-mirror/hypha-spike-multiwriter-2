@@ -91,7 +91,11 @@ async function joinExistingDomain(passphrase) {
 
     console.log('Original keys', originalKeys)
 
-    const localKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
+    // Derive the local keys based on the secret key. This both means that they are
+    // reproducible on the origin node and any other node where the person enters the
+    // passphrase but also that they are not guessable.
+    console.log(`Generating local keys based on secret key: ${originalKeys.nodeWriteKeyInHex}`)
+    const localKeys = await generateDerivativeKeys(originalKeys.nodeWriteKeyInHex, nodeName)
     model.keys = originalKeys
 
     // Clear the secret key as we don’t need it for non-origin nodes.
@@ -380,6 +384,7 @@ view.on('ready', () => {
   // Generate the initial node name as <platform> on <os>
   model.nodeName = `${platform.name} on ${platform.os}`
   view.nodeName = model.nodeName
+  model.domain = view.domain
 })
 
 view.on('signUp', () => {
@@ -390,14 +395,39 @@ view.on('signIn', (passphrase) => {
   initialiseNode(passphrase)
 })
 
-view.on('authorise', (otherNodeReadKey) => {
-  console.log(`Authorisation request for ${otherNodeReadKey.toString('hex')}`)
+view.on('authorise', async (otherNodeName) => {
+  console.log(`Authorisation request for ${otherNodeName}`)
 
-  model.db.authorize(otherNodeReadKey, (error, authorisation) => {
-    if (error) throw error
+  // Recreate the local keys for the node requesting authorisation
+  // by deriving it from the main write (secret) key
 
-    console.log(authorisation)
-  })
+  view.showAuthorisationProgress()
+
+  try {
+    console.log('passphrase', model.passphrase)
+    const originalKeys = await generateKeys(model.passphrase, model.domain)
+
+    console.log('Original keys', originalKeys)
+
+    // Derive the local keys based on the secret key. This both means that they are
+    // reproducible on the origin node and any other node where the person enters the
+    // passphrase but also that they are not guessable.
+    console.log(`Generating local keys based on secret key: ${originalKeys.nodeWriteKeyInHex}`)
+    const otherNodeLocalKeys = await generateDerivativeKeys(originalKeys.nodeWriteKeyInHex, otherNodeName)
+
+    model.db.authorize(otherNodeLocalKeys.nodeReadKey, (error, authorisation) => {
+      if (error) throw error
+
+      console.log(authorisation)
+    })
+
+    view.hideAuthorisationProgress()
+
+  } catch (error) {
+    view.hideAuthorisationProgress()
+    console.log('Error: could not generate keys for authorisation', error)
+    throw(error)
+  }
 })
 
 view.on('write', () => {
