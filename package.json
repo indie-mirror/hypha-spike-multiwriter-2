@@ -28,7 +28,7 @@
     "express": "^4.16.4",
     "express-ws": "^4.0.0",
     "hypercore": "^6.22.4",
-    "hyperdb": "git+https://github.com/aral/hyperdb.git",
+    "hyperdb": "github:aral/hyperdb#reproducible-local-writers",
     "monotonic-timestamp-base36": "^1.0.0",
     "platform": "^1.3.5",
     "pump": "^3.0.0",
