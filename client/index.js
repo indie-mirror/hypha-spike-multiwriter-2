@@ -83,8 +83,8 @@ async function joinExistingDomain(passphrase) {
   //
   console.log('Initialising new node with existing domain')
 
-  const domain = setupForm.elements.domain.value
-  const nodeName = setupForm.elements.nodeName.value
+  const domain = view.domain
+  const nodeName = view.nodeName
 
   try {
     const originalKeys = await generateKeys(passphrase, domain)

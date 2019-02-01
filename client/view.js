@@ -89,6 +89,10 @@ class View extends EventEmitter {
     nodeNameTextField.value = name
   }
 
+  get nodeName () {
+    return setupForm.elements.nodeName.value
+  }
+
 
   get domain () {
     return setupForm.elements.domain.value
