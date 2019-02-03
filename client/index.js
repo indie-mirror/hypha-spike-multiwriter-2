@@ -9,6 +9,8 @@ const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
 // Database
 const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
+
+const hypercoreProtocol = require('hypercore-protocol')
 const hypercore = require('hypercore')
 const hyperdb = require('hyperdb')
 
@@ -27,13 +29,15 @@ const nextId = require('monotonic-timestamp-base36')
 
 const platform = require('platform')
 
+const {DatEphemeralExtMsg} = require('@beaker/dat-ephemeral-ext-msg')
+var datEphemeralExtensionMessage = new DatEphemeralExtMsg()
+
 // App-specific
 const { to_hex } = require('./lib/helpers')
 const View = require('./view')
 
 const model = require('./model')
 const view = new View(model)
-
 
 // Initialise the local node. Either with a new or existing domain.
 async function initialiseNode(passphrase = null) {
@@ -232,6 +236,23 @@ function createDatabase(readKey, writeKey = null) {
     // Note: do not define onWrite(). Leads to errors.
   })
 
+  // Watch the database for ephemeral messages.
+  datEphemeralExtensionMessage.watchDat(db)
+
+  datEphemeralExtensionMessage.on('message', (database, peer, {contentType, payload}) => {
+    console.log('*** Ephemeral message received. ***')
+    console.log(`Peer ${peer} has sent payload >${payload}< of content type ${contentType} on database ${database}`)
+  })
+
+  datEphemeralExtensionMessage.on('received-bad-message', (error, database, peer, messageBuffer) => {
+    console.log('!!! Emphemeral message: received bad message !!!')
+    console.log(`Peer: ${peer}, database: ${database}, message buffer: ${messageBuffer}`, error)
+  })
+
+  setInterval(() => {
+    datEphemeralExtensionMessage.broadcast(db, {contentType: 'text/plain', payload: 'Anybody out there?'})
+  }, 1000)
+
   db.on('ready', () => {
     const dbKey = db.key
     const dbKeyInHex = to_hex(dbKey)
@@ -307,9 +328,13 @@ function createDatabase(readKey, writeKey = null) {
 
       // Create the local replication stream.
       const localReplicationStream = db.replicate({
-        live: true
+        live: true,
+        extensions: ['ephemeral']
       })
 
+      console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
+
+      // Start replicating.
       pump(
         remoteWebStream,
         localReplicationStream,
