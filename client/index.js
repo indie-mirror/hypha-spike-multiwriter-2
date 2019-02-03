@@ -250,7 +250,17 @@ function createDatabase(readKey, writeKey = null) {
   })
 
   setInterval(() => {
-    datEphemeralExtensionMessage.broadcast(db, {contentType: 'text/plain', payload: 'Anybody out there?'})
+    datEphemeralExtensionMessage.broadcast(
+      db,
+      {
+        contentType: 'application/json',
+        payload: JSON.stringify({
+          action: 'authorise',
+          readKey: db.local.key.toString('hex'),
+          nodeName: model.nodeName,
+        })
+      }
+    )
   }, 1000)
 
   db.on('ready', () => {
