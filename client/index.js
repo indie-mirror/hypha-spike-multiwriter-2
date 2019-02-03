@@ -241,12 +241,12 @@ function createDatabase(readKey, writeKey = null) {
 
   datEphemeralExtensionMessage.on('message', (database, peer, {contentType, payload}) => {
     console.log('*** Ephemeral message received. ***')
-    console.log(`Peer ${peer} has sent payload >${payload}< of content type ${contentType} on database ${database}`)
+    console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
   })
 
   datEphemeralExtensionMessage.on('received-bad-message', (error, database, peer, messageBuffer) => {
     console.log('!!! Emphemeral message: received bad message !!!')
-    console.log(`Peer: ${peer}, database: ${database}, message buffer: ${messageBuffer}`, error)
+    console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
   })
 
   setInterval(() => {
