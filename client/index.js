@@ -242,26 +242,29 @@ function createDatabase(readKey, writeKey = null) {
   datEphemeralExtensionMessage.on('message', (database, peer, {contentType, payload}) => {
     console.log('*** Ephemeral message received. ***')
     console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
+
+    // This is a proof of concept. This will be encrypted in the future.
+    const request = JSON.parse(payload.toString('utf8'))
+
+    console.log('request', request)
+
+    // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
+    if (request.action === 'authorise') {
+      if (db.key === db.local.key) {
+        alert(`Authorise node ${request.nodeName}?`)
+      } else {
+        console.log('Not a writeable node, ignoring authorise request.')
+      }
+    } else {
+      console.log('Unknown request.')
+    }
+
   })
 
   datEphemeralExtensionMessage.on('received-bad-message', (error, database, peer, messageBuffer) => {
     console.log('!!! Emphemeral message: received bad message !!!')
     console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
   })
-
-  setInterval(() => {
-    datEphemeralExtensionMessage.broadcast(
-      db,
-      {
-        contentType: 'application/json',
-        payload: JSON.stringify({
-          action: 'authorise',
-          readKey: db.local.key.toString('hex'),
-          nodeName: model.nodeName,
-        })
-      }
-    )
-  }, 1000)
 
   db.on('ready', () => {
     const dbKey = db.key
@@ -425,6 +428,7 @@ view.on('signIn', (passphrase) => {
   initialiseNode(passphrase)
 })
 
+// TODO: move to authorisation handler
 view.on('authorise', (otherNodeReadKey) => {
   console.log(`Authorisation request for ${otherNodeReadKey.toString('hex')}`)
 
@@ -433,6 +437,21 @@ view.on('authorise', (otherNodeReadKey) => {
 
     console.log(authorisation)
   })
+})
+
+view.on('requestAuthorisation', () => {
+  console.log('Requesting authorisation…')
+  datEphemeralExtensionMessage.broadcast(
+    model.db,
+    {
+      contentType: 'application/json',
+      payload: JSON.stringify({
+        action: 'authorise',
+        readKey: model.db.local.key.toString('hex'),
+        nodeName: model.nodeName,
+      })
+    }
+  )
 })
 
 view.on('write', () => {

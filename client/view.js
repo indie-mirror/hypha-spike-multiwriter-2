@@ -25,8 +25,7 @@ const viewModel = {
 const setupForm = document.getElementById('setupForm')
 const nodeNameTextField = document.getElementById('nodeName')
 const accessButton = new ButtonWithProgressIndicator('accessButton')
-const authoriseButton = new ButtonWithProgressIndicator('authoriseButton')
-const otherNodeLocalReadKeyInHexTextField = document.getElementById('otherNodeLocalReadKeyInHex')
+const requestAuthorisationButton = new ButtonWithProgressIndicator('requestAuthorisationButton')
 
 const passphraseTextField = document.getElementById('passphrase')
 const indeterminateProgressIndicator = document.getElementById('indeterminateProgressIndicator')
@@ -56,10 +55,8 @@ class View extends EventEmitter {
       this.resetForm()
 
       this.validatePassphrase()
-      this.validateOtherNodeLocalReadKey()
 
       passphraseTextField.addEventListener('keyup', this.validatePassphrase)
-      otherNodeLocalReadKeyInHexTextField.addEventListener('keyup', this.validateOtherNodeLocalReadKey)
 
       // Sign up / sign in button.
       accessButton.on('click', event => {
@@ -70,9 +67,9 @@ class View extends EventEmitter {
         }
       })
 
-      // Authorise button.
-      authoriseButton.on('click', event => {
-        this.emit('authorise', Buffer.from(otherNodeLocalReadKeyInHexTextField.value, 'hex'))
+      // Request authorisation button.
+      requestAuthorisationButton.on('click', event => {
+        this.emit('requestAuthorisation')
       })
 
       // Write button.
@@ -99,38 +96,38 @@ class View extends EventEmitter {
   }
 
 
-  validateOtherNodeLocalReadKey() {
-    // Validates that the read key you want to authorise is 64 bytes and hexadecimal.
-    const otherNodeReadKeyInHex = otherNodeLocalReadKeyInHexTextField.value
-    const publicReadKeyInHex = publicSigningKeyTextField.value
-    const localReadKeyInHex = localReadKeyTextField.value
+  // validateOtherNodeLocalReadKey() {
+  //   // Validates that the read key you want to authorise is 64 bytes and hexadecimal.
+  //   const otherNodeReadKeyInHex = otherNodeLocalReadKeyInHexTextField.value
+  //   const publicReadKeyInHex = publicSigningKeyTextField.value
+  //   const localReadKeyInHex = localReadKeyTextField.value
 
-    if (otherNodeReadKeyInHex.length !== 64) {
-      console.log('Other node local read key is the wrong size', otherNodeReadKeyInHex.length)
-      authoriseButton.enabled = false
-      return
-    }
+  //   if (otherNodeReadKeyInHex.length !== 64) {
+  //     console.log('Other node local read key is the wrong size', otherNodeReadKeyInHex.length)
+  //     authoriseButton.enabled = false
+  //     return
+  //   }
 
-    if (otherNodeReadKeyInHex.match(/^([0-9, a-f]+)$/) === null) {
-      console.log('Non-hexadecimal digits present in local read key; cannot be valid.')
-      authoriseButton.enabled = false
-      return
-    }
+  //   if (otherNodeReadKeyInHex.match(/^([0-9, a-f]+)$/) === null) {
+  //     console.log('Non-hexadecimal digits present in local read key; cannot be valid.')
+  //     authoriseButton.enabled = false
+  //     return
+  //   }
 
-    if (otherNodeReadKeyInHex === publicReadKeyInHex) {
-      console.log('The key to authorise cannot be the public read key for this domain.')
-      authoriseButton.enabled = false
-      return
-    }
+  //   if (otherNodeReadKeyInHex === publicReadKeyInHex) {
+  //     console.log('The key to authorise cannot be the public read key for this domain.')
+  //     authoriseButton.enabled = false
+  //     return
+  //   }
 
-    if (otherNodeReadKeyInHex === localReadKeyInHex) {
-      console.log('The key to authorise cannot be the local read key for this domain.')
-      authoriseButton.enabled = false
-      return
-    }
+  //   if (otherNodeReadKeyInHex === localReadKeyInHex) {
+  //     console.log('The key to authorise cannot be the local read key for this domain.')
+  //     authoriseButton.enabled = false
+  //     return
+  //   }
 
-    authoriseButton.enabled = true
-  }
+  //   authoriseButton.enabled = true
+  // }
 
 
   validatePassphrase () {
