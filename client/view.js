@@ -25,6 +25,9 @@ const viewModel = {
 const setupForm = document.getElementById('setupForm')
 const nodeNameTextField = document.getElementById('nodeName')
 const accessButton = new ButtonWithProgressIndicator('accessButton')
+const authoriseButton = new ButtonWithProgressIndicator('authoriseButton')
+const authorisationRequest = document.getElementById('authorisationRequest')
+const authorisationRequestNodeName = document.getElementById('authorisationRequestNodeName')
 const requestAuthorisationButton = new ButtonWithProgressIndicator('requestAuthorisationButton')
 
 const passphraseTextField = document.getElementById('passphrase')
@@ -65,6 +68,11 @@ class View extends EventEmitter {
         } else {
           this.emit('signIn', passphraseTextField.value)
         }
+      })
+
+      // Authorise button.
+      authoriseButton.on('click', event => {
+        this.emit('authorise')
       })
 
       // Request authorisation button.
@@ -221,6 +229,7 @@ class View extends EventEmitter {
 
 
   resetForm() {
+    authorisationRequest.hidden = true
     passphraseTextField.value = ''
     publicSigningKeyTextField.value = ''
     generatedTextField.value = 'No'
@@ -237,6 +246,10 @@ class View extends EventEmitter {
     errorsTextArea.value += error
   }
 
+  showAuthorisationRequest (nodeName) {
+    authorisationRequestNodeName.innerHTML = nodeName
+    authorisationRequest.hidden = false
+  }
 
   showDetails() {
     const detailSections = document.getElementsByClassName('details')

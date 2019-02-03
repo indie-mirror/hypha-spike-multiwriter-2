@@ -251,7 +251,8 @@ function createDatabase(readKey, writeKey = null) {
     // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
     if (request.action === 'authorise') {
       if (db.key === db.local.key) {
-        alert(`Authorise node ${request.nodeName}?`)
+        model.lastRequest = request
+        view.showAuthorisationRequest(request.nodeName)
       } else {
         console.log('Not a writeable node, ignoring authorise request.')
       }
@@ -429,8 +430,10 @@ view.on('signIn', (passphrase) => {
 })
 
 // TODO: move to authorisation handler
-view.on('authorise', (otherNodeReadKey) => {
-  console.log(`Authorisation request for ${otherNodeReadKey.toString('hex')}`)
+view.on('authorise', () => {
+  console.log(`Authorising request for ${model.lastRequest.nodeName} (local read key: ${model.lastRequest.readKey})`)
+
+  const otherNodeReadKey = Buffer.from(model.lastRequest.readKey, 'hex')
 
   model.db.authorize(otherNodeReadKey, (error, authorisation) => {
     if (error) throw error

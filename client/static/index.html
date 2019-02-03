@@ -11,6 +11,24 @@
   <h1>Hypha Spike: Multiwriter 2</h1>
 
   <form id='setupForm'>
+
+    <fieldset id='authorisationRequest'>
+      <legend>Authorisation request</legend>
+      <p>Authorise node <span id='authorisationRequestNodeName'></span>?</p>
+
+      <div id='authoriseButton' class='buttonWithProgressIndicator'>
+          <button type='button'>Authorise</button>
+          <!-- Courtesy: http://tobiasahlin.com/spinkit/ -->
+          <div class='spinner'>
+            <div class='rect1'></div>
+            <div class='rect2'></div>
+            <div class='rect3'></div>
+            <div class='rect4'></div>
+            <div class='rect5'></div>
+          </div>
+        </div>
+    </fieldset>
+
     <fieldset>
       <legend>Sign up / sign in</legend>
 
