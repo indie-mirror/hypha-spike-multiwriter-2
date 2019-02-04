@@ -29,6 +29,8 @@ const nextId = require('monotonic-timestamp-base36')
 
 const platform = require('platform')
 
+const crypto = require('crypto')
+
 const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
 const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
 
@@ -38,6 +40,8 @@ const View = require('./view')
 
 const model = require('./model')
 const view = new View(model)
+
+const ephemeralMessageHashes = {}
 
 // Initialise the local node. Either with a new or existing domain.
 async function initialiseNode(passphrase = null) {
@@ -211,6 +215,9 @@ function addRowToDatabase() {
   })
 }
 
+function createMessageHash(payload) {
+  return crypto.createHash('sha256').update(payload.toString('utf8')).digest('hex')
+}
 
 // TODO: Make this accept the global read key, global secret key, and local read key, and local write key as parameters.
 // ===== If the global secret key is not passed in and the local read and write keys are, then we create a writer based
@@ -243,10 +250,26 @@ function createDatabase(readKey, writeKey = null) {
     console.log('*** Ephemeral message received. ***')
     console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
 
+    console.log('payload', payload)
+
     // This is a proof of concept. This will be encrypted in the future.
     const request = JSON.parse(payload.toString('utf8'))
 
+    const messageHash = createMessageHash(payload)
+
     console.log('request', request)
+    console.log('messageHash', messageHash)
+
+    console.log('ephemeralMessageHashes[messageHash]', ephemeralMessageHashes[messageHash])
+
+    if (ephemeralMessageHashes[messageHash] !== undefined) {
+      console.log('Message already seen, ignoring.')
+      return
+    }
+
+    // Push the message hash into the list of seen messages in case we get it again
+    // due to redundant channels of communication.
+    ephemeralMessageHashes[messageHash] = true
 
     // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
     if (request.action === 'authorise') {
@@ -449,17 +472,22 @@ view.on('authorise', () => {
 
 view.on('requestAuthorisation', () => {
   console.log('Requesting authorisation…')
-  ephemeralMessagingChannel.broadcast(
-    model.db,
-    {
-      contentType: 'application/json',
-      payload: JSON.stringify({
-        action: 'authorise',
-        readKey: model.db.local.key.toString('hex'),
-        nodeName: model.nodeName,
-      })
-    }
-  )
+
+  const message = {
+    contentType: 'application/json',
+    payload: JSON.stringify({
+      nodeName: model.nodeName,
+      timestamp: new Date(),
+      action: 'authorise',
+      readKey: model.db.local.key.toString('hex'),
+    })
+  }
+
+  const messageHash = createMessageHash(message.payload)
+  ephemeralMessagingChannel.broadcast(model.db, message)
+  ephemeralMessageHashes[messageHash] = true
+
+  console.log(`Broadcast message with hash ${messageHash}`)
 })
 
 view.on('write', () => {
