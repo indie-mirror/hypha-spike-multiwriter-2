@@ -216,7 +216,8 @@ server.on('connect', (event) => {
         // Create a new replication stream
         const nativeReplicationStream = db.replicate({
           encrypt: false,
-          live: true
+          live: true,
+          extensions: ['ephemeral']
         })
 
         // Replicate!
