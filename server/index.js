@@ -130,7 +130,13 @@ server.on('connect', (event) => {
 
       console.log('request', request)
 
-      console.log('TODO: relay request to native nodes.')
+      console.log('Relaying request to web nodes via WebSocket and to native nodes via TCP.')
+
+      // Relay the message back to the database (so that it is sent to other web nodes
+      // via WebSocket and other native nodes over TCP).
+      ephemeralMessagingChannel.broadcast(db, {contentType, payload})
+
+      // console.log('TODO: relay request to native nodes.')
 
       // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
       // if (request.action === 'authorise') {
