@@ -340,31 +340,29 @@ function createDatabase(readKey, writeKey = null) {
 
     // Also join a WebRTC swarm so that we can peer-to-peer replicate
     // this hypercore (browser to browser).
-    if (false) {
-      const webSwarm = swarm(signalhub(model.keys.nodeDiscoveryKeyInHex, ['https://localhost:444']))
-      webSwarm.on('peer', function (remoteWebStream) {
+    const webSwarm = swarm(signalhub(model.keys.nodeDiscoveryKeyInHex, ['https://localhost:444']))
+    webSwarm.on('peer', function (remoteWebStream) {
 
-        console.log(`WebSwarm [peer for ${model.keys.nodeReadKeyInHex} (discovery key: ${model.keys.nodeDiscoveryKeyInHex})] About to replicate.`)
+      console.log(`WebSwarm [peer for ${model.keys.nodeReadKeyInHex} (discovery key: ${model.keys.nodeDiscoveryKeyInHex})] About to replicate.`)
 
-        // Create the local replication stream.
-        const localReplicationStream = db.replicate({
-          live: true,
-          extensions: ['ephemeral']
-        })
-
-        console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
-
-        // Start replicating.
-        pump(
-          remoteWebStream,
-          localReplicationStream,
-          remoteWebStream,
-          (error) => {
-            console.log(`[WebRTC] Pipe closed for ${model.keys.nodeReadKeyInHex}`, error && error.message)
-          }
-        )
+      // Create the local replication stream.
+      const localReplicationStream = db.replicate({
+        live: true,
+        extensions: ['ephemeral']
       })
-    }
+
+      console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
+
+      // Start replicating.
+      pump(
+        remoteWebStream,
+        localReplicationStream,
+        remoteWebStream,
+        (error) => {
+          console.log(`[WebRTC] Pipe closed for ${model.keys.nodeReadKeyInHex}`, error && error.message)
+        }
+      )
+    })
 
     //
     // TEST
