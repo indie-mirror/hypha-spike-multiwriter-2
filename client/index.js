@@ -29,8 +29,8 @@ const nextId = require('monotonic-timestamp-base36')
 
 const platform = require('platform')
 
-const {DatEphemeralExtMsg} = require('@beaker/dat-ephemeral-ext-msg')
-var datEphemeralExtensionMessage = new DatEphemeralExtMsg()
+const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
+var ephemeralMessagingChannel = new DatEphemeralMessageExtension()
 
 // App-specific
 const { to_hex } = require('./lib/helpers')
@@ -237,9 +237,9 @@ function createDatabase(readKey, writeKey = null) {
   })
 
   // Watch the database for ephemeral messages.
-  datEphemeralExtensionMessage.watchDat(db)
+  ephemeralMessagingChannel.watchDat(db)
 
-  datEphemeralExtensionMessage.on('message', (database, peer, {contentType, payload}) => {
+  ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
     console.log('*** Ephemeral message received. ***')
     console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
 
@@ -262,7 +262,7 @@ function createDatabase(readKey, writeKey = null) {
 
   })
 
-  datEphemeralExtensionMessage.on('received-bad-message', (error, database, peer, messageBuffer) => {
+  ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
     console.log('!!! Emphemeral message: received bad message !!!')
     console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
   })
@@ -312,9 +312,10 @@ function createDatabase(readKey, writeKey = null) {
     const localStream = db.replicate({
       // If we remove the encrypt: false, we get an error on the server:
       // Pipe closed for c4a99bc919c23d9c12b1fe440a41488141263e59fb98288388b578e105ad2523 Remote message is larger than 8MB (max allowed)
-      // Why is this and what’s the encryption that we’re turning off here and what effects does this have on privacy and security? (TODO: file issue)
+      // Why is this and what’s the encryption that we’re turning off here and what effects does this have on privacy and security? (TODO: investigate and file issue if necessary.)
       encrypt: false,
-      live: true
+      live: true,
+      extensions: ['ephemeral']
     })
 
     // Create a duplex stream.
@@ -444,7 +445,7 @@ view.on('authorise', () => {
 
 view.on('requestAuthorisation', () => {
   console.log('Requesting authorisation…')
-  datEphemeralExtensionMessage.broadcast(
+  ephemeralMessagingChannel.broadcast(
     model.db,
     {
       contentType: 'application/json',
