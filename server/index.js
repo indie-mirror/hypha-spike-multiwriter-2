@@ -134,22 +134,8 @@ server.on('connect', (event) => {
 
       // Relay the message back to the database (so that it is sent to other web nodes
       // via WebSocket and other native nodes over TCP).
-      ephemeralMessagingChannel.broadcast(db, {contentType, payload})
-
-      // console.log('TODO: relay request to native nodes.')
-
       // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
-      // if (request.action === 'authorise') {
-      //   if (db.key === db.local.key) {
-      //     model.lastRequest = request
-      //     view.showAuthorisationRequest(request.nodeName)
-      //   } else {
-      //     console.log('Not a writeable node, ignoring authorise request.')
-      //   }
-      // } else {
-      //   console.log('Unknown request.')
-      // }
-
+      ephemeralMessagingChannel.broadcast(db, {contentType, payload})
     })
 
     ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
