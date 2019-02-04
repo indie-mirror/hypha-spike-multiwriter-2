@@ -10,7 +10,7 @@ const generateEFFDicewarePassphrase = require('eff-diceware-passphrase')
 const { Buffer } = require('buffer')
 const ram = require('random-access-memory')
 
-const hypercoreProtocol = require('hypercore-protocol')
+const HypercoreProtocol = require('hypercore-protocol')
 const hypercore = require('hypercore')
 const hyperdb = require('hyperdb')
 
@@ -30,7 +30,7 @@ const nextId = require('monotonic-timestamp-base36')
 const platform = require('platform')
 
 const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
-var ephemeralMessagingChannel = new DatEphemeralMessageExtension()
+const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
 
 // App-specific
 const { to_hex } = require('./lib/helpers')
@@ -309,6 +309,8 @@ function createDatabase(readKey, writeKey = null) {
     // Hypercore db is ready: connect to web socket and start replicating.
     const remoteStream = webSocketStream(`wss://localhost/hypha/${dbKeyInHex}`)
 
+    console.log('remoteStream', remoteStream)
+
     const localStream = db.replicate({
       // If we remove the encrypt: false, we get an error on the server:
       // Pipe closed for c4a99bc919c23d9c12b1fe440a41488141263e59fb98288388b578e105ad2523 Remote message is larger than 8MB (max allowed)
@@ -317,6 +319,8 @@ function createDatabase(readKey, writeKey = null) {
       live: true,
       extensions: ['ephemeral']
     })
+
+    console.log('localStream', localStream)
 
     // Create a duplex stream.
     //
@@ -329,36 +333,38 @@ function createDatabase(readKey, writeKey = null) {
       localStream,
       remoteStream,
       (error) => {
-        console.log(`Pipe closed for ${dbKeyInHex}`, error && error.message)
+        console.log(`[WebSocket] Pipe closed for ${dbKeyInHex}`, error && error.message)
         view.logError(error.message)
       }
     )
 
     // Also join a WebRTC swarm so that we can peer-to-peer replicate
     // this hypercore (browser to browser).
-    const webSwarm = swarm(signalhub(model.keys.nodeDiscoveryKeyInHex, ['https://localhost:444']))
-    webSwarm.on('peer', function (remoteWebStream) {
+    if (false) {
+      const webSwarm = swarm(signalhub(model.keys.nodeDiscoveryKeyInHex, ['https://localhost:444']))
+      webSwarm.on('peer', function (remoteWebStream) {
 
-      console.log(`WebSwarm [peer for ${model.keys.nodeReadKeyInHex} (discovery key: ${model.keys.nodeDiscoveryKeyInHex})] About to replicate.`)
+        console.log(`WebSwarm [peer for ${model.keys.nodeReadKeyInHex} (discovery key: ${model.keys.nodeDiscoveryKeyInHex})] About to replicate.`)
 
-      // Create the local replication stream.
-      const localReplicationStream = db.replicate({
-        live: true,
-        extensions: ['ephemeral']
+        // Create the local replication stream.
+        const localReplicationStream = db.replicate({
+          live: true,
+          extensions: ['ephemeral']
+        })
+
+        console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
+
+        // Start replicating.
+        pump(
+          remoteWebStream,
+          localReplicationStream,
+          remoteWebStream,
+          (error) => {
+            console.log(`[WebRTC] Pipe closed for ${model.keys.nodeReadKeyInHex}`, error && error.message)
+          }
+        )
       })
-
-      console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
-
-      // Start replicating.
-      pump(
-        remoteWebStream,
-        localReplicationStream,
-        remoteWebStream,
-        (error) => {
-          console.log(`[WebRTC] Pipe closed for ${model.keys.nodeReadKeyInHex}`, error && error.message)
-        }
-      )
-    })
+    }
 
     //
     // TEST
