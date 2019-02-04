@@ -14,6 +14,8 @@ const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
 
 const swarm = hyperswarm()
 
+const crypto = require('crypto')
+
 // Basic argument validation.
 if (process.argv.length !== 3) {
   console.log(`Usage: node index.js <read key to replicate>`)
@@ -26,6 +28,12 @@ console.log(`\nAttempting to find and replicate hyperdb with read key:\n${readKe
 const readKeyBuffer = Buffer.from(readKeyInHex, 'hex')
 const discoveryKeyBuffer = discoveryKey(readKeyBuffer)
 const discoveryKeyInHex = discoveryKeyBuffer.toString('hex')
+
+const ephemeralMessageHashes = {}
+
+function createMessageHash(payload) {
+  return crypto.createHash('sha256').update(payload.toString('utf8')).digest('hex')
+}
 
 // Create the local hyperdb instance
 // NOTE: But this says do *NOT* pass the read key ???
@@ -64,7 +72,19 @@ ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload})
   // This is a proof of concept. This will be encrypted in the future.
   const request = JSON.parse(payload.toString('utf8'))
 
-  console.log('request', request)
+  const messageHash = createMessageHash(payload)
+  console.log('messageHash', messageHash)
+
+  if (ephemeralMessageHashes[messageHash] !== undefined) {
+    console.log('Message already seen, ignoring.')
+    return
+  }
+
+  // Push the message hash into the list of seen messages in case we get it again
+  // due to redundant channels of communication.
+  ephemeralMessageHashes[messageHash] = true
+
+  console.log('New message', request)
 })
 
 ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
