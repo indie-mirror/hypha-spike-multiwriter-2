@@ -25,7 +25,12 @@ form {
 }
 
 fieldset {
+  margin-top:2em;
   border: 0;
+}
+
+fieldset > p:first-of-type {
+  margin-top: 0;
 }
 
 legend {

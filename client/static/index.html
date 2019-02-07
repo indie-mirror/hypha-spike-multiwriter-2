@@ -131,6 +131,7 @@
 
     <fieldset class='details'>
       <legend>Global write (secret) key (origin node; Ed25519)</legend>
+      <p>The global read (public) key is what we call the <em>hyphalink</em> (above). The hypercore is also symmetrically encrypted using this so that only those who know the global read key (hyphalink) can see the contents of a hypercore. Hypha will implement symmetric encryption of contents on top of this.</p>
       <div>
         <label for='privateSigningKey'>Private signing key:</label>
         <textarea id='privateSigningKey' readonly></textarea>
@@ -151,13 +152,15 @@
 
     <fieldset class='details'>
       <legend>X25519 keys</legend>
+
+      <p>For Diffie-Hellman key exchange (currently unused).</p>
       <div>
-        <label for='publicEncryptionKey'>Public encryption key:</label>
+        <label for='publicEncryptionKey'>Public key:</label>
         <input type='text' id='publicEncryptionKey' readonly>
       </div>
 
       <div>
-        <label for='privateEncryptionKey'>Private encryption key:</label>
+        <label for='privateEncryptionKey'>Secret key:</label>
         <input type='text' id='privateEncryptionKey' readonly>
       </div>
 
