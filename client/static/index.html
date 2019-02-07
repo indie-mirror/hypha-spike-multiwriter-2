@@ -127,22 +127,30 @@
         <label for='errors'>Errors:</label>
         <textarea id='errors'>None</textarea>
       </div>
+    </fieldset>
 
-      <div>
-        <label for='localReadKey'>Local read key:</label>
-        <input type='text' id='localReadKey' readonly>
-      </div>
-
-      <div>
-        <label for='localWriteKey'>Local write key:</label>
-        <input type='text' id='localWriteKey' readonly>
-      </div>
-
+    <fieldset class='details'>
+      <legend>Global write (secret) key (origin node; Ed25519)</legend>
       <div>
         <label for='privateSigningKey'>Private signing key:</label>
         <textarea id='privateSigningKey' readonly></textarea>
       </div>
+    </fieldset>
 
+    <fieldset class='details'>
+      <legend>Local writer (hypercore) Ed25519 signing keys</legend>
+      <div>
+        <label for='localReadKey'>Read (public) key:</label>
+        <input type='text' id='localReadKey' readonly>
+      </div>
+      <div>
+        <label for='localWriteKey'>Write (secret) key:</label>
+        <input type='text' id='localWriteKey' readonly>
+      </div>
+    </fieldset>
+
+    <fieldset class='details'>
+      <legend>X25519 keys</legend>
       <div>
         <label for='publicEncryptionKey'>Public encryption key:</label>
         <input type='text' id='publicEncryptionKey' readonly>
