@@ -302,8 +302,6 @@ function createDatabase(readKey, writeKey = null) {
     // Update the model with the actual key material from the database.
     model.keys.nodeReadKey = db.key
     model.keys.nodeReadKeyInHex = to_hex(db.key)
-    model.keys.nodeWriteKey = db.secretKey
-    model.keys.nodeWriteKeyInHex = to_hex(db.secretKey)
     model.keys.localReadKeyInHex = db.local.key.toString('hex')
     model.keys.localWriteKeyInHex = db.local.secretKey.toString('hex')
 
