@@ -132,8 +132,10 @@
     <fieldset class='details'>
       <legend>Global write (secret) key (origin node; Ed25519)</legend>
       <p>The global read (public) key is what we call the <em>hyphalink</em> (above). The hypercore is also symmetrically encrypted using this so that only those who know the global read key (hyphalink) can see the contents of a hypercore. Hypha will implement symmetric encryption of contents on top of this.</p>
+      <p><strong>Note:</strong> On the origin node, the secret signing key, below, is the same as the local writer write (secret) key as there is only one
+      hypercore. On other nodes, it will be empty as the origin hypercore is read-only on other nodes.</p>
       <div>
-        <label for='privateSigningKey'>Private signing key:</label>
+        <label for='privateSigningKey'>Secret signing key:</label>
         <textarea id='privateSigningKey' readonly></textarea>
       </div>
     </fieldset>
