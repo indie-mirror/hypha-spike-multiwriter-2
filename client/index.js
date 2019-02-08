@@ -41,6 +41,8 @@ const View = require('./view')
 const model = require('./model')
 const view = new View(model)
 
+const sodium = require('sodium-universal')
+
 const ephemeralMessageHashes = {}
 
 // Initialise the local node. Either with a new or existing domain.
@@ -99,21 +101,16 @@ async function joinExistingDomain(passphrase) {
 
     console.log('Original keys', originalKeys)
 
-    const nodeKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
-    model.keys = nodeKeys
+    // const nodeKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
+    // model.keys = nodeKeys
 
     console.log ('===')
     console.log ('TO-DO')
     console.log (`Sign into domain ${domain} with global read key ${originalKeys.nodeReadKeyInHex} and global write key ${originalKeys.nodeWriteKeyInHex}`)
-    console.log (`Local read key: ${model.keys.nodeReadKeyInHex}. Local write key: ${model.keys.nodeWriteKeyInHex}`)
+    // console.log (`Local read key: ${model.keys.nodeReadKeyInHex}. Local write key: ${model.keys.nodeWriteKeyInHex}`)
     console.log ('===')
 
-    // We will eventually be generating the local writer based on reproducible keys
-    // but that requires extending hyperdb. Instead, to get multiwriter working, we
-    // are letting hyperdb generate the local writer.
-
-    // TODO: Pass in global read key, local read key, and local write key
-    // ===== to create a local database based on the origin node.
+    // Pass in global read key to create a local database based on the origin node.
     originalKeys.nodeWriteKey = null
     originalKeys.nodeWriteKeyInHex = null
     model.keys = originalKeys
@@ -152,7 +149,9 @@ async function generateDerivativeKeys(readKey, nodeId) {
 
 // Returns a promise that generates Ed25519 signing keys and
 // Curve25519 encryption keys by deriving them from the passed
-// passphrase and using the domain as the salt.
+// passphrase and using the domain as the salt. Also creates the
+// secret symmetric encryption key for the ephemeral messaging
+// channel.
 function generateKeys(passphrase, domain) {
   return new Promise((resolve, reject) => {
 
@@ -189,6 +188,15 @@ function generateKeys(passphrase, domain) {
         publicEncryptionKeyInHex: to_hex(keys.publicKey),
         privateEncryptionKeyInHex: to_hex(keys.secretKey)
       }
+
+      // Derive the key that we will use to encrypt the ephemeral
+      // messaging channel from the secretSignKey (node write key).
+      const context = Buffer.from('ephemera')
+      const ephemeralMessagingChannelSecretKey = Buffer.alloc(sodium.crypto_secretbox_KEYBYTES)
+      sodium.crypto_kdf_derive_from_key(ephemeralMessagingChannelSecretKey, 1, context, nodeKeys.nodeWriteKey)
+
+      nodeKeys.ephemeralMessagingChannelSecretKey = ephemeralMessagingChannelSecretKey
+      nodeKeys.ephemeralMessagingChannelSecretKeyInHex = ephemeralMessagingChannelSecretKey.toString('hex')
 
       resolve(nodeKeys)
     })

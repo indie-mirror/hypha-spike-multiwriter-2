@@ -40,6 +40,7 @@ const errorsTextArea = document.getElementById('errors')
 const publicSigningKeyTextField = document.getElementById('publicSigningKey')
 const localReadKeyTextField = document.getElementById('localReadKey')
 const localWriteKeyTextField = document.getElementById('localWriteKey')
+const ephemeralMessagingChannelSecretKeyTextField = document.getElementById('ephemeralMessagingChannelSecretKey')
 const privateSigningKeyTextArea = document.getElementById('privateSigningKey')
 const publicEncryptionKeyTextField = document.getElementById('publicEncryptionKey')
 const privateEncryptionKeyTextField = document.getElementById('privateEncryptionKey')
@@ -280,6 +281,7 @@ class View extends EventEmitter {
     privateEncryptionKeyTextField.value = this.model.keys.privateEncryptionKeyInHex
     localReadKeyTextField.value = this.model.keys.localReadKeyInHex
     localWriteKeyTextField.value = this.model.keys.localWriteKeyInHex
+    ephemeralMessagingChannelSecretKeyTextField.value = this.model.keys.ephemeralMessagingChannelSecretKeyInHex
   }
 
 
