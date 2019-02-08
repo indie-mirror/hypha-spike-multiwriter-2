@@ -1,7 +1,7 @@
 {
-  "name": "hypha-spike-multiwriter-1",
+  "name": "hypha-spike-multiwriter-2",
   "version": "1.0.0",
-  "description": "Hypha Spike: Multiwriter 1",
+  "description": "Hypha Spike: Multiwriter 2",
   "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@source.ind.ie:hypha/spikes/multiwriter-1.git"
+    "url": "git@source.ind.ie:hypha/spikes/multiwriter-2.git"
   },
   "keywords": [
     "hypha",
@@ -37,6 +37,7 @@
     "random-access-memory": "^3.1.1",
     "session25519": "github:aral/session25519",
     "signalhub": "^4.9.0",
+    "sodium-universal": "^2.0.0",
     "webrtc-swarm": "^2.9.0",
     "websocket-stream": "^5.1.2"
   }
