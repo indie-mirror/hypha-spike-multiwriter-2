@@ -192,6 +192,7 @@ function generateKeys(passphrase, domain) {
       // Derive the key that we will use to encrypt the ephemeral
       // messaging channel from the secretSignKey (node write key).
       const context = Buffer.from('ephemera')
+      // Note: sodium_malloc and memory locking are not supported in the browser.
       const ephemeralMessagingChannelSecretKey = Buffer.alloc(sodium.crypto_secretbox_KEYBYTES)
       sodium.crypto_kdf_derive_from_key(ephemeralMessagingChannelSecretKey, 1, context, nodeKeys.nodeWriteKey)
 
