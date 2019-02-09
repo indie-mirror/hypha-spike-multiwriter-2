@@ -1,1 +1,3 @@
 node_modules
+server/localhost.pem
+server/localhost-key.pem
