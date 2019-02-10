@@ -22,8 +22,8 @@ const router = express.Router()
 const hyperdbs = {}
 
 // TODO: Create unprivileged relay functionality.
-// const { EphemeralMessagingChannel } = require('@hypha/ephameral-messaging-channel')
-// const ephemeralMessagingChannel = new ephemeralMessagingChannel()
+// const { SecureEphemeralMessagingChannel } = require('@hypha/ephameral-messaging-channel')
+// const secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel()
 
 // Create secure signalhub server.
 const signalHub = signalHubServer({
@@ -115,9 +115,9 @@ server.on('connect', (event) => {
 
     // Join the ephemeral messaging channel on this database.
     // Watch the database for ephemeral messages.
-    // ephemeralMessagingChannel.watchDat(db)
+    // secureEphemeralMessagingChannel.watchDat(db)
 
-    // ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
+    // secureEphemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
 
     //   // TODO: Once the ephemeral messaging channel is encrypted, all we
     //   // will be doing on the always-on node is to relay received messages to the
@@ -136,10 +136,10 @@ server.on('connect', (event) => {
     //   // Relay the message back to the database (so that it is sent to other web nodes
     //   // via WebSocket and other native nodes over TCP).
     //   // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
-    //   ephemeralMessagingChannel.broadcast(db, {contentType, payload})
+    //   secureEphemeralMessagingChannel.broadcast(db, {contentType, payload})
     // })
 
-    // ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
+    // secureEphemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
     //   console.log('!!! Emphemeral message: received bad message !!!')
     //   console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
     // })

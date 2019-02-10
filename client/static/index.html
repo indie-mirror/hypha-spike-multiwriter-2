@@ -156,8 +156,8 @@
       <legend>Symmetric encryption key for ephemeral messaging channel</legend>
       <p>The ephemeral messaging channel (implemented as a Dat protocol extension) is symmetrically encrypted using this key derived from the passphrase (precisely: from the first 32 bytes of the Ed25519 secret key which is derived from the passphrase). The channel is currently used only for authorising new nodes for a single hypha. If we decide to implement ephemeral messaging between different hyphas/people, we will implement X25519 (see below).</p>
       <div>
-        <label for='ephemeralMessagingChannelSecretKey'>Secret key:</label>
-        <input type='text' id='ephemeralMessagingChannelSecretKey' readonly>
+        <label for='secureEphemeralMessagingChannelSecretKey'>Secret key:</label>
+        <input type='text' id='secureEphemeralMessagingChannelSecretKey' readonly>
       </div>
     </fieldset>
 

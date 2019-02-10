@@ -31,12 +31,12 @@ const platform = require('platform')
 
 const crypto = require('crypto')
 
-const { EphemeralMessagingChannel } = require('@hypha/ephemeral-messaging-channel')
+const { SecureEphemeralMessagingChannel } = require('@hypha/secure-ephemeral-messaging-channel')
 
 // The secure ephemeral messaging channel will be initialised once the
 // secret key used for symmetric encryption is derived (after the person
 // has either signed up or signed in to their hypha.)
-let ephemeralMessagingChannel
+let secureEphemeralMessagingChannel
 
 // App-specific
 const { to_hex } = require('./lib/helpers')
@@ -83,8 +83,8 @@ async function createDomain() {
   }
 
   // Create the secure ephemeral messaging channel
-  console.log('About to create secure ephemeral messaging channel with secret key', model.keys.ephemeralMessagingChannelSecretKey.toString('hex'))
-  ephemeralMessagingChannel = new EphemeralMessagingChannel(model.keys.ephemeralMessagingChannelSecretKey)
+  console.log('About to create secure ephemeral messaging channel with secret key', model.keys.secureEphemeralMessagingChannelSecretKey.toString('hex'))
+  secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel(model.keys.secureEphemeralMessagingChannelSecretKey)
 
   // This is the origin node; pass in the write key also.
   createDatabase(model.keys.nodeReadKey, model.keys.nodeWriteKey)
@@ -117,7 +117,7 @@ async function joinExistingDomain(passphrase) {
     model.keys = originalKeys
 
     // Create the secure ephemeral messaging channel
-    ephemeralMessagingChannel = new EphemeralMessagingChannel(model.keys.ephemeralMessagingChannelSecretKey)
+    secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel(model.keys.secureEphemeralMessagingChannelSecretKey)
 
     console.log(`About to create database with read key: ${originalKeys.nodeReadKeyInHex}`)
     createDatabase(originalKeys.nodeReadKey)
@@ -198,11 +198,11 @@ function generateKeys(passphrase, domain) {
       // messaging channel from the secretSignKey (node write key).
       const context = Buffer.from('ephemera')
       // Note: sodium_malloc and memory locking are not supported in the browser.
-      const ephemeralMessagingChannelSecretKey = Buffer.alloc(sodium.crypto_secretbox_KEYBYTES)
-      sodium.crypto_kdf_derive_from_key(ephemeralMessagingChannelSecretKey, 1, context, nodeKeys.nodeWriteKey)
+      const secureEphemeralMessagingChannelSecretKey = Buffer.alloc(sodium.crypto_secretbox_KEYBYTES)
+      sodium.crypto_kdf_derive_from_key(secureEphemeralMessagingChannelSecretKey, 1, context, nodeKeys.nodeWriteKey)
 
-      nodeKeys.ephemeralMessagingChannelSecretKey = ephemeralMessagingChannelSecretKey
-      nodeKeys.ephemeralMessagingChannelSecretKeyInHex = ephemeralMessagingChannelSecretKey.toString('hex')
+      nodeKeys.secureEphemeralMessagingChannelSecretKey = secureEphemeralMessagingChannelSecretKey
+      nodeKeys.secureEphemeralMessagingChannelSecretKeyInHex = secureEphemeralMessagingChannelSecretKey.toString('hex')
 
       resolve(nodeKeys)
     })
@@ -258,10 +258,10 @@ function createDatabase(readKey, writeKey = null) {
   })
 
   // Watch the database for ephemeral messages.
-  ephemeralMessagingChannel.addDatabase(db)
-  // ephemeralMessagingChannel.watchDat(db)
+  secureEphemeralMessagingChannel.addDatabase(db)
+  // secureEphemeralMessagingChannel.watchDat(db)
 
-  ephemeralMessagingChannel.on('message', (database, peer, message) => {
+  secureEphemeralMessagingChannel.on('message', (database, peer, message) => {
     console.log('*** Ephemeral message received. ***')
     console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent a mesage on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`, message)
 
@@ -297,7 +297,7 @@ function createDatabase(readKey, writeKey = null) {
 
   })
 
-  ephemeralMessagingChannel.on('received-bad-message', (error, database, peer) => {
+  secureEphemeralMessagingChannel.on('received-bad-message', (error, database, peer) => {
     console.log('!!! Emphemeral message: received bad message !!!', error, database, peer)
   })
 
@@ -349,7 +349,7 @@ function createDatabase(readKey, writeKey = null) {
       // Why is this and what’s the encryption that we’re turning off here and what effects does this have on privacy and security? (TODO: investigate and file issue if necessary.)
       encrypt: false,
       live: true,
-      extensions: ['encrypted-ephemeral']
+      extensions: ['secure-ephemeral']
     })
 
     console.log('localStream', localStream)
@@ -380,7 +380,7 @@ function createDatabase(readKey, writeKey = null) {
       // Create the local replication stream.
       const localReplicationStream = db.replicate({
         live: true,
-        extensions: ['encrypted-ephemeral']
+        extensions: ['secure-ephemeral']
       })
 
       console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
@@ -490,7 +490,7 @@ view.on('requestAuthorisation', () => {
   }
 
   const messageHash = createMessageHash(message)
-  ephemeralMessagingChannel.broadcast(model.db, message)
+  secureEphemeralMessagingChannel.broadcast(model.db, message)
   ephemeralMessageHashes[messageHash] = true
 
   console.log(`Broadcast message with hash ${messageHash}`)
