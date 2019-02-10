@@ -31,6 +31,8 @@ const platform = require('platform')
 
 const crypto = require('crypto')
 
+// const { EphemeralMessagingChannel } = require('@hypha/ephameral-messaging-channel')
+// const ephemeralMessagingChannel = new ephemeralMessagingChannel()
 const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
 const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
 
@@ -253,6 +255,7 @@ function createDatabase(readKey, writeKey = null) {
   })
 
   // Watch the database for ephemeral messages.
+  // ephemeralMessagingChannel.addDatabase(db)
   ephemeralMessagingChannel.watchDat(db)
 
   ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
