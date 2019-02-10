@@ -19,8 +19,8 @@
   "author": "Aral Balkan",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@hypha/ephemeral-messaging-channel": "git+https://git@source.ind.ie/hypha/ephemeral-messaging-channel.git",
     "@babel/core": "^7.2.2",
-    "@beaker/dat-ephemeral-ext-msg": "github:aral/dat-ephemeral-ext-msg#hyperdb",
     "@hyperswarm/network": "0.0.4",
     "babelify": "^10.0.0",
     "budo": "github:aral/budo",

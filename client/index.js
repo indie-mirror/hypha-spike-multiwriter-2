@@ -31,10 +31,12 @@ const platform = require('platform')
 
 const crypto = require('crypto')
 
-// const { EphemeralMessagingChannel } = require('@hypha/ephameral-messaging-channel')
-// const ephemeralMessagingChannel = new ephemeralMessagingChannel()
-const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
-const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
+const { EphemeralMessagingChannel } = require('@hypha/ephemeral-messaging-channel')
+
+// The secure ephemeral messaging channel will be initialised once the
+// secret key used for symmetric encryption is derived (after the person
+// has either signed up or signed in to their hypha.)
+let ephemeralMessagingChannel
 
 // App-specific
 const { to_hex } = require('./lib/helpers')
@@ -80,6 +82,10 @@ async function createDomain() {
     throw(error)
   }
 
+  // Create the secure ephemeral messaging channel
+  console.log('About to create secure ephemeral messaging channel with secret key', model.keys.ephemeralMessagingChannelSecretKey.toString('hex'))
+  ephemeralMessagingChannel = new EphemeralMessagingChannel(model.keys.ephemeralMessagingChannelSecretKey)
+
   // This is the origin node; pass in the write key also.
   createDatabase(model.keys.nodeReadKey, model.keys.nodeWriteKey)
 
@@ -103,19 +109,16 @@ async function joinExistingDomain(passphrase) {
 
     console.log('Original keys', originalKeys)
 
-    // const nodeKeys = await generateDerivativeKeys(originalKeys.nodeReadKeyInHex, nodeName)
-    // model.keys = nodeKeys
-
-    console.log ('===')
-    console.log ('TO-DO')
     console.log (`Sign into domain ${domain} with global read key ${originalKeys.nodeReadKeyInHex} and global write key ${originalKeys.nodeWriteKeyInHex}`)
-    // console.log (`Local read key: ${model.keys.nodeReadKeyInHex}. Local write key: ${model.keys.nodeWriteKeyInHex}`)
-    console.log ('===')
 
     // Pass in global read key to create a local database based on the origin node.
     originalKeys.nodeWriteKey = null
     originalKeys.nodeWriteKeyInHex = null
     model.keys = originalKeys
+
+    // Create the secure ephemeral messaging channel
+    ephemeralMessagingChannel = new EphemeralMessagingChannel(model.keys.ephemeralMessagingChannelSecretKey)
+
     console.log(`About to create database with read key: ${originalKeys.nodeReadKeyInHex}`)
     createDatabase(originalKeys.nodeReadKey)
     view.showDetails()
@@ -226,8 +229,8 @@ function addRowToDatabase() {
   })
 }
 
-function createMessageHash(payload) {
-  return crypto.createHash('sha256').update(payload.toString('utf8')).digest('hex')
+function createMessageHash(message) {
+  return crypto.createHash('sha256').update(JSON.stringify(message)).digest('hex')
 }
 
 // TODO: Make this accept the global read key, global secret key, and local read key, and local write key as parameters.
@@ -255,19 +258,16 @@ function createDatabase(readKey, writeKey = null) {
   })
 
   // Watch the database for ephemeral messages.
-  // ephemeralMessagingChannel.addDatabase(db)
-  ephemeralMessagingChannel.watchDat(db)
+  ephemeralMessagingChannel.addDatabase(db)
+  // ephemeralMessagingChannel.watchDat(db)
 
-  ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
+  ephemeralMessagingChannel.on('message', (database, peer, message) => {
     console.log('*** Ephemeral message received. ***')
-    console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
+    console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent a mesage on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`, message)
 
-    console.log('payload', payload)
+    const request = message
 
-    // This is a proof of concept. This will be encrypted in the future.
-    const request = JSON.parse(payload.toString('utf8'))
-
-    const messageHash = createMessageHash(payload)
+    const messageHash = createMessageHash(message)
 
     console.log('request', request)
     console.log('messageHash', messageHash)
@@ -297,9 +297,8 @@ function createDatabase(readKey, writeKey = null) {
 
   })
 
-  ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
-    console.log('!!! Emphemeral message: received bad message !!!')
-    console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
+  ephemeralMessagingChannel.on('received-bad-message', (error, database, peer) => {
+    console.log('!!! Emphemeral message: received bad message !!!', error, database, peer)
   })
 
   db.on('ready', () => {
@@ -350,7 +349,7 @@ function createDatabase(readKey, writeKey = null) {
       // Why is this and what’s the encryption that we’re turning off here and what effects does this have on privacy and security? (TODO: investigate and file issue if necessary.)
       encrypt: false,
       live: true,
-      extensions: ['ephemeral']
+      extensions: ['encrypted-ephemeral']
     })
 
     console.log('localStream', localStream)
@@ -381,7 +380,7 @@ function createDatabase(readKey, writeKey = null) {
       // Create the local replication stream.
       const localReplicationStream = db.replicate({
         live: true,
-        extensions: ['ephemeral']
+        extensions: ['encrypted-ephemeral']
       })
 
       console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
@@ -484,16 +483,13 @@ view.on('requestAuthorisation', () => {
   console.log('Requesting authorisation…')
 
   const message = {
-    contentType: 'application/json',
-    payload: JSON.stringify({
-      nodeName: model.nodeName,
-      timestamp: new Date(),
-      action: 'authorise',
-      readKey: model.db.local.key.toString('hex'),
-    })
+    nodeName: model.nodeName,
+    timestamp: new Date(),
+    action: 'authorise',
+    readKey: model.db.local.key.toString('hex'),
   }
 
-  const messageHash = createMessageHash(message.payload)
+  const messageHash = createMessageHash(message)
   ephemeralMessagingChannel.broadcast(model.db, message)
   ephemeralMessageHashes[messageHash] = true
 

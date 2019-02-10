@@ -21,8 +21,9 @@ const router = express.Router()
 
 const hyperdbs = {}
 
-const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
-const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
+// TODO: Create unprivileged relay functionality.
+// const { EphemeralMessagingChannel } = require('@hypha/ephameral-messaging-channel')
+// const ephemeralMessagingChannel = new ephemeralMessagingChannel()
 
 // Create secure signalhub server.
 const signalHub = signalHubServer({
@@ -84,7 +85,7 @@ server.on('connect', (event) => {
       const localReplicationStream = db.replicate({
         encrypt: false,
         live: true,
-        extensions: ['ephemeral']
+        // extensions: ['ephemeral']
       })
 
       // console.log('remoteWebStream', remoteWebStream)
@@ -114,34 +115,34 @@ server.on('connect', (event) => {
 
     // Join the ephemeral messaging channel on this database.
     // Watch the database for ephemeral messages.
-    ephemeralMessagingChannel.watchDat(db)
+    // ephemeralMessagingChannel.watchDat(db)
 
-    ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
+    // ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
 
-      // TODO: Once the ephemeral messaging channel is encrypted, all we
-      // will be doing on the always-on node is to relay received messages to the
-      // native nodes and ditto from native notes to web nodes.
+    //   // TODO: Once the ephemeral messaging channel is encrypted, all we
+    //   // will be doing on the always-on node is to relay received messages to the
+    //   // native nodes and ditto from native notes to web nodes.
 
-      console.log('*** Ephemeral message received. ***')
-      console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
+    //   console.log('*** Ephemeral message received. ***')
+    //   console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
 
-      // This is a proof of concept. This will be encrypted in the future.
-      const request = JSON.parse(payload.toString('utf8'))
+    //   // This is a proof of concept. This will be encrypted in the future.
+    //   const request = JSON.parse(payload.toString('utf8'))
 
-      console.log('request', request)
+    //   console.log('request', request)
 
-      console.log('Relaying request to web nodes via WebSocket and to native nodes via TCP.')
+    //   console.log('Relaying request to web nodes via WebSocket and to native nodes via TCP.')
 
-      // Relay the message back to the database (so that it is sent to other web nodes
-      // via WebSocket and other native nodes over TCP).
-      // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
-      ephemeralMessagingChannel.broadcast(db, {contentType, payload})
-    })
+    //   // Relay the message back to the database (so that it is sent to other web nodes
+    //   // via WebSocket and other native nodes over TCP).
+    //   // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
+    //   ephemeralMessagingChannel.broadcast(db, {contentType, payload})
+    // })
 
-    ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
-      console.log('!!! Emphemeral message: received bad message !!!')
-      console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
-    })
+    // ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
+    //   console.log('!!! Emphemeral message: received bad message !!!')
+    //   console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
+    // })
 
     db.on('ready', () => {
       console.log(`Hyperdb ready (${readKey})`)
@@ -164,7 +165,7 @@ server.on('connect', (event) => {
       const localReplicationStream = db.replicate({
         encrypt: false,
         live: true,
-        extensions: ['ephemeral']
+        // extensions: ['ephemeral']
       })
 
       pipeline(
@@ -203,7 +204,7 @@ server.on('connect', (event) => {
         const nativeReplicationStream = db.replicate({
           encrypt: false,
           live: true,
-          extensions: ['ephemeral']
+          // extensions: ['ephemeral']
         })
 
         // Replicate!
