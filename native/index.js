@@ -9,31 +9,36 @@ const { pipeline } = require('stream')
 
 const { discoveryKey } = require('hypercore/lib/crypto')
 
-// const { DatEphemeralExtMsg: DatEphemeralMessageExtension } = require('@beaker/dat-ephemeral-ext-msg')
-// const ephemeralMessagingChannel = new DatEphemeralMessageExtension()
+const { SecureEphemeralMessagingChannel } = require('@hypha/secure-ephemeral-messaging-channel')
 
 const swarm = hyperswarm()
 
 const crypto = require('crypto')
 
+const readlineSync = require('readline-sync')
+
 // Basic argument validation.
-if (process.argv.length !== 3) {
-  console.log(`Usage: node index.js <read key to replicate>`)
+if (process.argv.length !== 4) {
+  console.log(`Usage: node index.js <read key> <secure ephemeral messaging channel key (secret)>`)
   process.exit()
 }
 
 const readKeyInHex = process.argv[2]
-console.log(`\nAttempting to find and replicate hyperdb with read key:\n${readKeyInHex}\n`)
+const secureEphemeralMessagingChannelKeyInHex = process.argv[3]
+console.log(`\nAttempting to find and replicate hyperdb with:\n  Read key: ${readKeyInHex}\n  Secure ephemeral messaging channel key: ${secureEphemeralMessagingChannelKeyInHex}`)
+
+const secureEphemeralMessagingChannelKey = Buffer.from(secureEphemeralMessagingChannelKeyInHex, 'hex')
+const secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel(secureEphemeralMessagingChannelKey)
 
 const readKeyBuffer = Buffer.from(readKeyInHex, 'hex')
 const discoveryKeyBuffer = discoveryKey(readKeyBuffer)
 const discoveryKeyInHex = discoveryKeyBuffer.toString('hex')
 
-// const ephemeralMessageHashes = {}
+const ephemeralMessageHashes = {}
 
-// function createMessageHash(payload) {
-//   return crypto.createHash('sha256').update(payload.toString('utf8')).digest('hex')
-// }
+function createMessageHash(message) {
+  return crypto.createHash('sha256').update(JSON.stringify(message)).digest('hex')
+}
 
 // Create the local hyperdb instance
 // NOTE: But this says do *NOT* pass the read key ???
@@ -56,41 +61,63 @@ const watcher = db.watch('/table', () => {
 })
 
 
-// Join the ephemeral messaging channel on this database.
-// Watch the database for ephemeral messages.
-// ephemeralMessagingChannel.watchDat(db)
+// Add this database to the secure ephemeral messaging channel.
+secureEphemeralMessagingChannel.addDatabase(db)
 
-// ephemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
+secureEphemeralMessagingChannel.on('message', (database, peer, message) => {
+  console.log('*** Ephemeral message received. ***')
+  console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent a mesage on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`, message)
 
-//   // TODO: Once the ephemeral messaging channel is encrypted, all we
-//   // will be doing on the always-on node is to relay received messages to the
-//   // native nodes and ditto from native notes to web nodes.
+  const request = message
 
-//   console.log('*** Ephemeral message received. ***')
-//   console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
+  const messageHash = createMessageHash(message)
 
-//   // This is a proof of concept. This will be encrypted in the future.
-//   const request = JSON.parse(payload.toString('utf8'))
+  console.log('request', request)
+  console.log('messageHash', messageHash)
 
-//   const messageHash = createMessageHash(payload)
-//   console.log('messageHash', messageHash)
+  console.log('ephemeralMessageHashes[messageHash]', ephemeralMessageHashes[messageHash])
 
-//   if (ephemeralMessageHashes[messageHash] !== undefined) {
-//     console.log('Message already seen, ignoring.')
-//     return
-//   }
+  if (ephemeralMessageHashes[messageHash] !== undefined) {
+    console.log('Message already seen, ignoring.')
+    return
+  }
 
-//   // Push the message hash into the list of seen messages in case we get it again
-//   // due to redundant channels of communication.
-//   ephemeralMessageHashes[messageHash] = true
+  // Push the message hash into the list of seen messages in case we get it again
+  // due to redundant channels of communication.
+  ephemeralMessageHashes[messageHash] = true
 
-//   console.log('New message', request)
-// })
+  // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
+  if (request.action === 'authorise') {
+    // TODO: This is not the correct check as the node may have been authorised. FIX! LEFT OFF HERE. Also same for client.
+    if (db.key === db.local.key) {
 
-// ephemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
-//   console.log('!!! Emphemeral message: received bad message !!!')
-//   console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
-// })
+      if (readlineSync.keyInYN(`Authorise ${request.nodeName}? (y/n)`)) {
+        // 'Y' key was pressed.
+        console.log(`Authorising request for ${request.nodeName} (local read key: ${request.readKey})`)
+
+        const otherNodeReadKey = Buffer.from(request.readKey, 'hex')
+
+        db.authorize(otherNodeReadKey, (error, authorisation) => {
+          if (error) throw error
+
+          console.log(authorisation)
+        })
+      } else {
+        // Not 'Y'
+        console.log('Request ignored.');
+      }
+    } else {
+      console.log('Not a writeable node, ignoring authorise request.')
+    }
+  } else {
+    console.log('Unknown request.')
+  }
+
+})
+
+secureEphemeralMessagingChannel.on('received-bad-message', (error, database, peer) => {
+  console.log('!!! Emphemeral message: received bad message !!!', error, database, peer)
+})
 
 
 db.on('ready', () => {
@@ -115,7 +142,7 @@ db.on('ready', () => {
     const localReplicationStream = db.replicate({
       encrypt: false,
       live: true,
-      // extensions: ['ephemeral']
+      extensions: ['secure-ephemeral']
     })
 
     pipeline(
@@ -126,6 +153,23 @@ db.on('ready', () => {
         console.log(`Pipe closed for ${readKeyInHex}`, error && error.message)
       }
     )
+
+    // Request write access
+    setTimeout(() => {
+      console.log('Requesting write access…')
+      const message = {
+        nodeName: 'Native node',
+        timestamp: new Date(),
+        action: 'authorise',
+        readKey: db.local.key.toString('hex'),
+      }
+
+      const messageHash = createMessageHash(message)
+      secureEphemeralMessagingChannel.broadcast(db, message)
+      ephemeralMessageHashes[messageHash] = true
+
+      console.log(`Broadcast message with hash ${messageHash}`)
+    }, 1000)
   })
 
 })
