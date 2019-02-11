@@ -21,9 +21,14 @@ const router = express.Router()
 
 const hyperdbs = {}
 
-// TODO: Create unprivileged relay functionality.
-// const { SecureEphemeralMessagingChannel } = require('@hypha/ephameral-messaging-channel')
-// const secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel()
+const { SecureEphemeralMessagingChannel } = require('@hypha/secure-ephemeral-messaging-channel')
+
+// Note: the always-on node is an unprivileged node. It will only relay
+// ===== the secure messages to other nodes (to other web nodes via WebSocket
+//       and to other native nodes via TCP). It cannot decrypt the messages
+//       itself. This is by design as the always-on nodes are designed to be
+//       hosted by untrusted third parties.
+const secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel()
 
 // Create secure signalhub server.
 const signalHub = signalHubServer({
@@ -85,7 +90,7 @@ server.on('connect', (event) => {
       const localReplicationStream = db.replicate({
         encrypt: false,
         live: true,
-        // extensions: ['ephemeral']
+        extensions: ['secure-ephemeral']
       })
 
       // console.log('remoteWebStream', remoteWebStream)
@@ -113,36 +118,18 @@ server.on('connect', (event) => {
     // Add to list of existing hyperdbs.
     hyperdbs[readKey] = db
 
-    // Join the ephemeral messaging channel on this database.
-    // Watch the database for ephemeral messages.
-    // secureEphemeralMessagingChannel.watchDat(db)
+    // Add this database to the secure ephemeral messaging channel.
+    // Note: this is an unprivileged node; it will act as a relay.
+    // It does so automatically, there is no further action required.
+    // None of the regular methods for privileged nodes are active on
+    // it and it emits no events.
+    secureEphemeralMessagingChannel.addDatabase(db)
 
-    // secureEphemeralMessagingChannel.on('message', (database, peer, {contentType, payload}) => {
-
-    //   // TODO: Once the ephemeral messaging channel is encrypted, all we
-    //   // will be doing on the always-on node is to relay received messages to the
-    //   // native nodes and ditto from native notes to web nodes.
-
-    //   console.log('*** Ephemeral message received. ***')
-    //   console.log(`Peer.feed.key ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')} has sent payload >${payload}< of content type ${contentType} on database with key and id ${database.key.toString('hex')} ${database.id.toString('hex')}`)
-
-    //   // This is a proof of concept. This will be encrypted in the future.
-    //   const request = JSON.parse(payload.toString('utf8'))
-
-    //   console.log('request', request)
-
-    //   console.log('Relaying request to web nodes via WebSocket and to native nodes via TCP.')
-
-    //   // Relay the message back to the database (so that it is sent to other web nodes
-    //   // via WebSocket and other native nodes over TCP).
-    //   // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
-    //   secureEphemeralMessagingChannel.broadcast(db, {contentType, payload})
-    // })
-
-    // secureEphemeralMessagingChannel.on('received-bad-message', (error, database, peer, messageBuffer) => {
-    //   console.log('!!! Emphemeral message: received bad message !!!')
-    //   console.log(`Peer.feed.key: ${peer.feed.key.toString('hex')}, peer.feed.id ${peer.feed.id.toString('hex')}, database: ${database}, message buffer: ${messageBuffer}`, error)
-    // })
+    // For debugging. Listen for the relay event. This event will most
+    // likely be removed later.
+    secureEphemeralMessagingChannel.on ('relay', (decodedMessage) => {
+      console.log('About to relay secure message', decodedMessage)
+    })
 
     db.on('ready', () => {
       console.log(`Hyperdb ready (${readKey})`)
@@ -165,7 +152,7 @@ server.on('connect', (event) => {
       const localReplicationStream = db.replicate({
         encrypt: false,
         live: true,
-        // extensions: ['ephemeral']
+        extensions: ['secure-ephemeral']
       })
 
       pipeline(
@@ -204,7 +191,7 @@ server.on('connect', (event) => {
         const nativeReplicationStream = db.replicate({
           encrypt: false,
           live: true,
-          // extensions: ['ephemeral']
+          extensions: ['secure-ephemeral']
         })
 
         // Replicate!
@@ -216,7 +203,6 @@ server.on('connect', (event) => {
             console.log(`(Native stream from swarm) Pipe closed for ${readKey}`, error && error.message)
           }
         )
-
       })
     })
   })

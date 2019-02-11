@@ -259,7 +259,6 @@ function createDatabase(readKey, writeKey = null) {
 
   // Watch the database for ephemeral messages.
   secureEphemeralMessagingChannel.addDatabase(db)
-  // secureEphemeralMessagingChannel.watchDat(db)
 
   secureEphemeralMessagingChannel.on('message', (database, peer, message) => {
     console.log('*** Ephemeral message received. ***')
@@ -370,31 +369,33 @@ function createDatabase(readKey, writeKey = null) {
       }
     )
 
-    // Also join a WebRTC swarm so that we can peer-to-peer replicate
-    // this hypercore (browser to browser).
-    const webSwarm = swarm(signalhub(model.keys.nodeDiscoveryKeyInHex, ['https://localhost:444']))
-    webSwarm.on('peer', function (remoteWebStream) {
+    // !!! Temporarily disabled to test WebSocket !!!
 
-      console.log(`WebSwarm [peer for ${model.keys.nodeReadKeyInHex} (discovery key: ${model.keys.nodeDiscoveryKeyInHex})] About to replicate.`)
+    // // Also join a WebRTC swarm so that we can peer-to-peer replicate
+    // // this hypercore (browser to browser).
+    // const webSwarm = swarm(signalhub(model.keys.nodeDiscoveryKeyInHex, ['https://localhost:444']))
+    // webSwarm.on('peer', function (remoteWebStream) {
 
-      // Create the local replication stream.
-      const localReplicationStream = db.replicate({
-        live: true,
-        extensions: ['secure-ephemeral']
-      })
+    //   console.log(`WebSwarm [peer for ${model.keys.nodeReadKeyInHex} (discovery key: ${model.keys.nodeDiscoveryKeyInHex})] About to replicate.`)
 
-      console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
+    //   // Create the local replication stream.
+    //   const localReplicationStream = db.replicate({
+    //     live: true,
+    //     extensions: ['secure-ephemeral']
+    //   })
 
-      // Start replicating.
-      pump(
-        remoteWebStream,
-        localReplicationStream,
-        remoteWebStream,
-        (error) => {
-          console.log(`[WebRTC] Pipe closed for ${model.keys.nodeReadKeyInHex}`, error && error.message)
-        }
-      )
-    })
+    //   console.log('[[[ About to start replicating over webrtc. localReplicationStream.id = ]]]', localReplicationStream.id.toString('hex'))
+
+    //   // Start replicating.
+    //   pump(
+    //     remoteWebStream,
+    //     localReplicationStream,
+    //     remoteWebStream,
+    //     (error) => {
+    //       console.log(`[WebRTC] Pipe closed for ${model.keys.nodeReadKeyInHex}`, error && error.message)
+    //     }
+    //   )
+    // })
 
     //
     // TEST
