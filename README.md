@@ -4,7 +4,7 @@
 
 ## Usage
 
-1. Create keys using [mkcert](https://github.com/FiloSottile/mkcert) in the _/server_ directory:
+1. Create keys using [mkcert](https://github.com/FiloSottile/mkcert) in the _/always-on_ directory:
 
     ```bash
     # If you haven’t used mkcert before, you must first create
@@ -42,5 +42,5 @@
     ### macOS
 
     ```bash
-    authbind node server/index.js
+    authbind node always-on/index.js
     ```
