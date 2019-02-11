@@ -283,22 +283,35 @@ function createDatabase(readKey, writeKey = null) {
     ephemeralMessageHashes[messageHash] = true
 
     // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
+
+    // Any authorised node (initially just the origin node but then any other node that was
+    // authorised by the origin node) can authorise other nodes.
     if (request.action === 'authorise') {
-      if (db.key === db.local.key) {
-        model.lastRequest = request
-        view.showAuthorisationRequest(request.nodeName)
-      } else {
-        console.log('Not a writeable node, ignoring authorise request.')
-      }
+
+      console.log('Checking self authorisation state.')
+      db.authorized(db.local.key, (error, isAuthorised) => {
+        if (error) {
+          console.log('Error while checking for authorisation state of the local writer on the global database. Ignoring request.')
+          return
+        }
+
+        if (isAuthorised === true) {
+          model.lastRequest = request
+          view.showAuthorisationRequest(request.nodeName)
+        } else {
+          console.log('Not a writeable node, ignoring authorise request.')
+        }
+      })
     } else {
       console.log('Unknown request.')
     }
-
   })
+
 
   secureEphemeralMessagingChannel.on('received-bad-message', (error, database, peer) => {
     console.log('!!! Emphemeral message: received bad message !!!', error, database, peer)
   })
+
 
   db.on('ready', () => {
     const dbKey = db.key
