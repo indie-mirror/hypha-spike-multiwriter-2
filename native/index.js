@@ -1,6 +1,12 @@
+////////////////////////////////////////////////////////////////////////////////
 //
-// Hypha: A native client for testing replication of a single hypercore.
+// Hypha: A very basic (mock) native node.
 //
+// Copyright © 2019 Aral Balkan.
+// Released under AGPLv3 or later.
+//
+////////////////////////////////////////////////////////////////////////////////
+
 const hypercore = require('hypercore')
 const hyperdb = require('hyperdb')
 const ram = require('random-access-memory')

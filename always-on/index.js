@@ -1,6 +1,18 @@
+////////////////////////////////////////////////////////////////////////////////
 //
-// Hypha server.
+// Hypha: always-on node (unprivileged).
 //
+// This node exists to provide findability and reliability. It does not
+// know the owner’s passphrase or any of the secret keys derived from it.
+// It also acts as a dumb relay between browser nodes and native nodes.
+// (It communicates with browser nodes via WebSocket and with native nodes
+// via TCP.)
+//
+// Copyright © 2019 Aral Balkan.
+// Released under AGPLv3 or later.
+//
+////////////////////////////////////////////////////////////////////////////////
+
 const fs = require('fs')
 const https = require('https')
 const { pipeline } = require('stream')
@@ -32,8 +44,8 @@ const secureEphemeralMessagingChannel = new SecureEphemeralMessagingChannel()
 
 // Create secure signalhub server.
 const signalHub = signalHubServer({
-  key: fs.readFileSync('server/localhost-key.pem'),
-  cert: fs.readFileSync('server/localhost.pem')
+  key: fs.readFileSync('always-on/localhost-key.pem'),
+  cert: fs.readFileSync('always-on/localhost.pem')
 })
 
 signalHub.on('subscribe', channel => {
@@ -49,13 +61,13 @@ signalHub.listen(444, 'localhost', () => {
 })
 
 // Create secure development web server via budo.
-const server = budo('client/index.js', {
+const server = budo('browser/index.js', {
   live: false,
   port: 443,
   ssl: true,
-  dir: 'client/static/',              // Static content directory
-  key: 'server/localhost-key.pem',
-  cert: 'server/localhost.pem',
+  dir: 'browser/static/',              // Static content directory
+  key: 'always-on/localhost-key.pem',
+  cert: 'always-on/localhost.pem',
   serve: 'bundle.js',
   stream: process.stdout,             // Log to console
   browserify: {

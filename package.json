@@ -2,10 +2,10 @@
   "name": "hypha-spike-multiwriter-2",
   "version": "1.0.0",
   "description": "Hypha Spike: Multiwriter 2",
-  "main": "server/index.js",
+  "main": "always-on/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server/index.js --watch server/index.js"
+    "start": "nodemon always-on/index.js --watch always-on/index.js"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,11 @@
+////////////////////////////////////////////////////////////////////////////////
 //
-// Hypha node
+// Hypha browser node.
 //
+// Copyright © 2019 Aral Balkan.
+// Released under AGPLv3 or later.
+//
+////////////////////////////////////////////////////////////////////////////////
 
 // Initial key generation
 const session25519 = require('session25519')
@@ -140,15 +145,6 @@ function generatePassphrase () {
       resolve(passphrase)
     }, 0)
   })
-}
-
-
-// Generates derivative key material for a passed read key
-// (Ed25519 public signing key) using the nodeId (the reproducible
-// node identifier based on the properties of the node – currently
-// the platform and client identifiers).
-async function generateDerivativeKeys(readKey, nodeId) {
-  return generateKeys(readKey, nodeId)
 }
 
 
