@@ -88,31 +88,39 @@ secureEphemeralMessagingChannel.on('message', (database, peer, message) => {
 
   // Note (todo): also, we should probably not broadcast this to all nodes but only to known writers.
   if (request.action === 'authorise') {
-    // TODO: This is not the correct check as the node may have been authorised. FIX! LEFT OFF HERE. Also same for client.
-    if (db.key === db.local.key) {
 
-      if (readlineSync.keyInYN(`Authorise ${request.nodeName}? (y/n)`)) {
-        // 'Y' key was pressed.
-        console.log(`Authorising request for ${request.nodeName} (local read key: ${request.readKey})`)
+    // Check if the local node is authorised to write to the global database.
+    // (Otherwise we cannot approve authorisation requests and should ignore them.)
+    db.authorized(db.local.key, (error, isAuthorised) => {
 
-        const otherNodeReadKey = Buffer.from(request.readKey, 'hex')
-
-        db.authorize(otherNodeReadKey, (error, authorisation) => {
-          if (error) throw error
-
-          console.log(authorisation)
-        })
-      } else {
-        // Not 'Y'
-        console.log('Request ignored.');
+      if (error) {
+        console.log('Error while checking for authorisation state of the local writer on the global database. Ignoring request.')
+        return
       }
-    } else {
-      console.log('Not a writeable node, ignoring authorise request.')
-    }
+
+      if (isAuthorised === true) {
+        if (readlineSync.keyInYN(`Authorise ${request.nodeName}? (y/n)`)) {
+          // 'Y' key was pressed.
+          console.log(`Authorising request for ${request.nodeName} (local read key: ${request.readKey})`)
+
+          const otherNodeReadKey = Buffer.from(request.readKey, 'hex')
+
+          db.authorize(otherNodeReadKey, (error, authorisation) => {
+            if (error) throw error
+
+            console.log(authorisation)
+          })
+        } else {
+          // Not 'Y'
+          console.log('Request ignored.');
+        }
+      } else {
+        console.log('Not a writeable node, ignoring authorise request.')
+      }
+    })
   } else {
     console.log('Unknown request.')
   }
-
 })
 
 secureEphemeralMessagingChannel.on('received-bad-message', (error, database, peer) => {
