@@ -57,6 +57,9 @@ const ephemeralMessageHashes = {}
 // Initialise the local node. Either with a new or existing domain.
 async function initialiseNode(passphrase = null) {
 
+  // Refresh the node name in case it was updated.
+  model.nodeName = view.nodeName
+
   view.showAccessProgress()
 
   if (passphrase === null) {
