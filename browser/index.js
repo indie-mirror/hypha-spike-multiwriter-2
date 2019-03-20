@@ -211,7 +211,8 @@ function generateKeys(passphrase, domain) {
 
 function addRowToDatabase() {
   const key = nextId()
-  const value = `(${model.localCounter}) ${model.nodeName}`
+  const value = `${model.nodeName}: ${view.message}`
+  view.clearMessage()
   let obj = {}
   obj[key] = value
   model.db.put('/table', obj, (error, o) => {
@@ -343,7 +344,7 @@ function createDatabase(readKey, writeKey = null) {
         // New data is available on the db. Display it on the view.
         const obj = values[0].value
         for (let [key, value] of Object.entries(obj)) {
-          view.addContent(`${key}: ${value}\n`)
+          view.addContent(`${value}\n`)
         }
       })
     })
@@ -410,21 +411,21 @@ function createDatabase(readKey, writeKey = null) {
     //
     // TEST
     //
-    const NUMBER_TO_APPEND = 3
+    // const NUMBER_TO_APPEND = 3
 
-    const intervalToUpdateInMS = 500
-    let counter = 0
-    updateInterval = setInterval(() => {
-      counter++
-      if (counter === NUMBER_TO_APPEND) {
-        console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
-        clearInterval(updateInterval)
-        updateInterval = null
-      }
+    // const intervalToUpdateInMS = 500
+    // let counter = 0
+    // updateInterval = setInterval(() => {
+    //   counter++
+    //   if (counter === NUMBER_TO_APPEND) {
+    //     console.log(`Reached max number of items to append (${NUMBER_TO_APPEND}). Will not add any more.`)
+    //     clearInterval(updateInterval)
+    //     updateInterval = null
+    //   }
 
-      addRowToDatabase()
+    //   addRowToDatabase()
 
-    }, intervalToUpdateInMS)
+    // }, intervalToUpdateInMS)
   })
 
   db.on('error', (error) => {

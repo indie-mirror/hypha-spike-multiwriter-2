@@ -99,6 +99,13 @@ class View extends EventEmitter {
     return setupForm.elements.nodeName.value
   }
 
+  get message () {
+    return setupForm.elements.message.value
+  }
+
+  clearMessage () {
+    setupForm.elements.message.value = ""
+  }
 
   get domain () {
     return setupForm.elements.domain.value
