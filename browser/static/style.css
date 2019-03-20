@@ -94,6 +94,14 @@ footer {
   border-top: 1px solid black;
 }
 
+.messageButton {
+  position: absolute;
+  left: inherit;
+  right: 0;
+  height: 31px;
+  width: 7em;
+}
+
 Button {
   position: absolute;
   left: calc(50% - 32px);
